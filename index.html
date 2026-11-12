@@ -20,7 +20,13 @@
 <h2>Mis pedidos</h2>
 <form id="historyEmailForm">
 <label>Correo del pedido<input type="email" name="email" autocomplete="email" maxlength="254" required></label>
-<button type="submit">Enviar código</button>
+<label>Contraseña<input type="password" name="password" autocomplete="current-password" required></label>
+<button type="submit" value="login">Iniciar sesión</button>
+<div id="historyRegistration" hidden>
+<label>DNI/NIE<input name="identifier" maxlength="40" autocomplete="off" disabled></label>
+<label>Repetir contraseña<input type="password" name="repeatPassword" autocomplete="new-password" disabled></label>
+</div>
+<button type="button" id="historyRegisterToggle">Crear cuenta</button>
 </form>
 <form id="historyCodeForm" hidden>
 <label>Código del correo<input name="code" autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]{6,10}" required></label>
@@ -330,6 +336,9 @@ function clearOrderHistory() {
   historyList.replaceChildren();
   historyStatus.textContent = '';
   historyEmailForm.reset();
+  setHistoryRegistration(false);
+  pendingHistoryIdentifier = '';
+  verifiedHistorySession = null;
   historyCodeForm.reset();
   historyEmailForm.hidden = false;
   historyCodeForm.hidden = historyMore.hidden = historyLogout.hidden = true;
@@ -373,23 +382,92 @@ async function loadOrderHistory() {
   }
 }
 
+async function openOrderHistory(data) {
+  if (!data?.access_token) throw Error('No se ha podido iniciar sesión.');
+  historyToken = data.access_token;
+  historyEmailForm.reset();
+  setHistoryRegistration(false);
+  pendingHistoryIdentifier = '';
+  verifiedHistorySession = null;
+  historyCodeForm.reset();
+  historyCodeForm.hidden = historyEmailForm.hidden = true;
+  historyLogout.hidden = false;
+  historyStatus.textContent = 'Cargando pedidos…';
+  await loadOrderHistory();
+}
+
+let historyRegistering = false;
+let pendingHistoryIdentifier = '';
+let verifiedHistorySession = null;
+const historyRegisterToggle = $('#historyRegisterToggle');
+function setHistoryRegistration(active) {
+  historyRegistering = active;
+  $('#historyRegistration').hidden = !active;
+  const {identifier, repeatPassword, password} = historyEmailForm.elements;
+  identifier.disabled = repeatPassword.disabled = !active;
+  identifier.required = repeatPassword.required = active;
+  password.autocomplete = active ? 'new-password' : 'current-password';
+  historyEmailForm.querySelector('button[type=submit]').textContent = active ? 'Registrar cuenta' : 'Iniciar sesión';
+  historyRegisterToggle.textContent = active ? 'Volver a iniciar sesión' : 'Crear cuenta';
+}
+historyRegisterToggle.onclick = () => {
+  setHistoryRegistration(!historyRegistering);
+  historyEmailForm.elements.email.focus();
+};
+
 historyEmailForm.onsubmit = async event => {
   event.preventDefault();
-  const button = event.submitter;
+  const buttons = [...historyEmailForm.querySelectorAll('button')];
+  if (buttons.some(button => button.disabled)) return;
+  const register = historyRegistering;
   const email = historyEmailForm.elements.email.value.trim().toLowerCase();
-  button.disabled = true;
+  const password = historyEmailForm.elements.password.value;
+  buttons.forEach(button => { button.disabled = true; });
+  historyCodeForm.hidden = true;
   try {
-    const result = await clubRequest('/auth/v1/otp', {body:{email, create_user:true}});
-    if (!result.ok) throw Error('No se ha podido enviar el código. Vuelve a intentarlo en un minuto.');
+    if (register && password.length < 8) throw Error('Elige una contraseña de al menos 8 caracteres.');
+    const identifier = register ? normalizeMemberId(historyEmailForm.elements.identifier.value) : '';
+    if (register && password !== historyEmailForm.elements.repeatPassword.value) throw Error('Las contraseñas no coinciden.');
+    if (register && !/^(?:[0-9]{8}|[XYZ][0-9]{7})[A-Z]$/.test(identifier)) throw Error('Introduce un DNI o NIE completo, incluida la letra.');
+    const path = register ? '/auth/v1/signup' : '/auth/v1/token?grant_type=password';
+    const result = await clubRequest(path, {body:{email,password}});
+    if (register && (['user_already_exists','email_exists'].includes(result.data?.code) ||
+        (result.ok && Array.isArray(result.data?.identities) && result.data.identities.length === 0))) {
+      historyStatus.textContent = 'Ese correo ya está registrado. Inicia sesión con tu contraseña.';
+      historyEmailForm.elements.password.value = '';
+      setHistoryRegistration(false);
+      return;
+    }
+    if (!result.ok) {
+      if (result.data?.code !== 'email_not_confirmed') {
+        throw Error(register ? 'No se ha podido crear la cuenta. Comprueba los datos o inicia sesión si ya tienes cuenta.' : 'No se ha podido iniciar sesión. Comprueba el correo y la contraseña.');
+      }
+      const resend = await clubRequest('/auth/v1/resend', {body:{type:'signup',email}});
+      if (!resend.ok) throw Error('No se ha podido reenviar el código. Espera un minuto y vuelve a intentarlo.');
+    }
+    if (!register && result.ok) {
+      await openOrderHistory(result.data);
+      return;
+    }
+    if (register && result.data?.access_token) {
+      await clubRequest('/auth/v1/logout?scope=local', {token:result.data.access_token});
+      throw Error('El registro requiere activar la confirmación por correo.');
+    }
     historyEmail = email;
+    pendingHistoryIdentifier = identifier;
+    verifiedHistorySession = null;
+    historyEmailForm.elements.repeatPassword.value = '';
+    historyEmailForm.elements.identifier.value = '';
+    historyEmailForm.elements.password.value = '';
     historyCodeForm.reset();
     historyCodeForm.hidden = false;
-    historyStatus.textContent = 'Introduce el código que te hemos enviado a ' + email + '.';
+    historyStatus.textContent = 'Introduce el código de confirmación enviado a ' + email + '. Si ya tienes una cuenta confirmada, inicia sesión.';
     historyCodeForm.elements.code.focus();
   } catch (error) {
     historyStatus.textContent = error.message;
+    if (historyToken) historyMore.hidden = false;
   } finally {
-    button.disabled = false;
+    buttons.forEach(button => { button.disabled = false; });
   }
 };
 
@@ -398,16 +476,21 @@ historyCodeForm.onsubmit = async event => {
   const button = event.submitter;
   button.disabled = true;
   try {
-    const result = await clubRequest('/auth/v1/verify', {body:{
-      email: historyEmail, token: historyCodeForm.elements.code.value.trim(), type:'email',
-    }});
-    if (!result.ok || !result.data?.access_token) throw Error('Código incorrecto o caducado.');
-    historyToken = result.data.access_token;
-    historyCodeForm.reset();
-    historyCodeForm.hidden = historyEmailForm.hidden = true;
-    historyLogout.hidden = false;
-    historyStatus.textContent = 'Cargando pedidos…';
-    await loadOrderHistory();
+    if (!verifiedHistorySession) {
+      const result = await clubRequest('/auth/v1/verify', {body:{
+        email: historyEmail, token: historyCodeForm.elements.code.value.trim(), type:'email',
+      }});
+      if (!result.ok || !result.data?.access_token) throw Error('Código incorrecto o caducado.');
+      verifiedHistorySession = result.data;
+    }
+    if (pendingHistoryIdentifier) {
+      const saved = await clubRequest('/rest/v1/rpc/bm_pinto_save_customer_identifier', {
+        token: verifiedHistorySession.access_token,
+        body:{identifier:pendingHistoryIdentifier},
+      });
+      if (!saved.ok) throw Error('Correo confirmado. No se pudo guardar el DNI/NIE. Pulsa de nuevo para reintentar.');
+    }
+    await openOrderHistory(verifiedHistorySession);
   } catch (error) {
     historyStatus.textContent = error.message;
     if (historyToken) historyMore.hidden = false;
