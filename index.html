@@ -171,6 +171,45 @@ try {
   }
 } catch {}
 
+const receiptStoragePrefix = 'bm-pinto-receipt:';
+const receiptAccessDuration = 7 * 24 * 60 * 60 * 1000;
+
+function rememberGuestReceipt(order) {
+  try {
+    localStorage.setItem(receiptStoragePrefix + order.code, JSON.stringify(order));
+  } catch {}
+}
+
+function availableGuestReceipts() {
+  const orders = new Map(guestReceiptOrders.map(order => [order.code, order]));
+  try {
+    for (const key of Object.keys(localStorage)) {
+      if (!key.startsWith(receiptStoragePrefix)) continue;
+      const code = key.slice(receiptStoragePrefix.length);
+      if (!/^[a-f0-9]{64}$/.test(code)) continue;
+      const order = JSON.parse(localStorage.getItem(key));
+      if (!order || order.savedAt + receiptAccessDuration <= Date.now()) {
+        localStorage.removeItem(key);
+        orders.delete(code);
+      } else {
+        orders.set(code, {...order, code});
+      }
+    }
+  } catch {}
+  return [...orders.values()]
+    .filter(order => !order.savedAt || order.savedAt + receiptAccessDuration > Date.now())
+    .sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+}
+
+for (const order of guestReceiptOrders) {
+  order.savedAt ??= Date.now();
+  rememberGuestReceipt(order);
+}
+try {
+  sessionStorage.removeItem('bm-pinto-guest-receipts');
+  sessionStorage.removeItem('bm-pinto-guest-receipt');
+} catch {}
+
 async function getGuestCheckoutCode() {
   if (hasGuestTestLink()) return guestTestCode;
   if (guestCheckoutCode) return guestCheckoutCode;
@@ -204,8 +243,9 @@ async function checkOrderMembership(identifier) {
 async function submitGuestTestOrder(payload) {
   const code = await getGuestCheckoutCode();
   const result = await guestTestRpc('bm_pinto_create_guest_test_order', { payload });
-  guestReceiptOrders = [{code, reference: result.reference}, ...guestReceiptOrders.filter(order => order.code !== code)];
-  try { sessionStorage.setItem('bm-pinto-guest-receipts', JSON.stringify(guestReceiptOrders)); } catch {}
+  const order = {code, reference: result.reference, savedAt: Date.now()};
+  guestReceiptOrders = [order, ...guestReceiptOrders.filter(previous => previous.code !== code)];
+  rememberGuestReceipt(order);
   guestCheckoutCode = '';
   $('#guestReceiptButton').hidden = false;
   return {...result, receiptCode: code};
@@ -258,14 +298,18 @@ async function loadGuestReceipt() {
 }
 
 guestReceiptOrder.onchange = loadGuestReceipt;
-$('#guestReceiptButton').hidden = !guestReceiptOrders.length && !hasGuestTestLink();
+function updateGuestReceiptButton() {
+  $('#guestReceiptButton').hidden = !availableGuestReceipts().length && !hasGuestTestLink();
+}
+updateGuestReceiptButton();
+window.addEventListener('storage', updateGuestReceiptButton);
 $('#guestReceiptButton').onclick = () => {
-  const orders = guestReceiptOrders.slice();
+  const orders = availableGuestReceipts();
   if (hasGuestTestLink() && !orders.some(order => order.code === guestTestCode)) {
     orders.push({code: guestTestCode, reference: 'Pedido del enlace de prueba'});
   }
   guestReceiptOrder.replaceChildren(...orders.map(order => new Option(order.reference, order.code)));
-  $('#guestReceiptOrderLabel').hidden = orders.length < 2;
+  $('#guestReceiptOrderLabel').hidden = !orders.length;
   $('#guestReceiptDialog').showModal();
   loadGuestReceipt();
 };
