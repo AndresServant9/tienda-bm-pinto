@@ -27,6 +27,15 @@
 <label>Repetir contraseña<input type="password" name="repeatPassword" autocomplete="new-password" disabled></label>
 </div>
 <button type="button" id="historyRegisterToggle">Crear cuenta</button>
+<button type="button" id="historyRecover">Olvidé mi contraseña</button>
+</form>
+<form id="historyRecoveryForm" hidden>
+<p id="historyRecoveryHint" role="status"></p>
+<label>Código de recuperación<input name="code" autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]{6,10}" required></label>
+<label>Nueva contraseña<input type="password" name="password" autocomplete="new-password" minlength="8" required></label>
+<label>Repetir contraseña<input type="password" name="repeatPassword" autocomplete="new-password" minlength="8" required></label>
+<button type="submit">Guardar nueva contraseña</button>
+<button type="button" id="historyRecoveryBack">Volver al inicio de sesión</button>
 </form>
 <form id="historyCodeForm" hidden>
 <label>Código del correo<input name="code" autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]{6,10}" required></label>
@@ -498,6 +507,81 @@ historyCodeForm.onsubmit = async event => {
     button.disabled = false;
   }
 };
+const historyRecoveryForm = $('#historyRecoveryForm');
+const historyRecoveryHint = $('#historyRecoveryHint');
+let recoveryEmail = '';
+let recoveryToken = '';
+
+$('#historyRecover').onclick = async event => {
+  const emailInput = historyEmailForm.elements.email;
+  if (!emailInput.reportValidity()) return;
+  const button = event.currentTarget;
+  button.disabled = true;
+  try {
+    const email = emailInput.value.trim().toLowerCase();
+    const result = await clubRequest('/auth/v1/recover', {body:{email}});
+    if (!result.ok) throw Error('No se pudo solicitar el código. Inténtalo más tarde.');
+    recoveryEmail = email;
+    recoveryToken = '';
+    historyEmailForm.elements.password.value = '';
+    historyEmailForm.hidden = historyCodeForm.hidden = true;
+    historyRecoveryForm.reset();
+    historyRecoveryForm.hidden = false;
+    historyStatus.textContent = '';
+    historyRecoveryHint.textContent = 'Si hay una cuenta con ese correo, recibirás un código de recuperación.';
+    historyRecoveryForm.elements.code.focus();
+  } catch (error) {
+    historyStatus.textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+};
+
+function closePasswordRecovery() {
+  const token = recoveryToken;
+  recoveryEmail = recoveryToken = '';
+  historyRecoveryForm.reset();
+  historyRecoveryForm.hidden = true;
+  historyEmailForm.hidden = false;
+  setHistoryRegistration(false);
+  if (token) clubRequest('/auth/v1/logout?scope=local', {token}).catch(() => {});
+}
+$('#historyRecoveryBack').onclick = () => closePasswordRecovery();
+
+historyRecoveryForm.onsubmit = async event => {
+  event.preventDefault();
+  const {code, password, repeatPassword} = historyRecoveryForm.elements;
+  const button = event.submitter;
+  if (button.disabled) return;
+  button.disabled = $('#historyRecoveryBack').disabled = true;
+  try {
+    if (password.value !== repeatPassword.value) throw Error('Las contraseñas no coinciden.');
+    if (!recoveryToken) {
+      const verified = await clubRequest('/auth/v1/verify', {
+        body:{email:recoveryEmail, token:code.value.trim(), type:'recovery'},
+      });
+      if (!verified.ok || !verified.data?.access_token) throw Error('Código incorrecto o caducado.');
+      recoveryToken = verified.data.access_token;
+    }
+    const updated = await clubRequest('/auth/v1/user', {
+      method:'PUT', token:recoveryToken, body:{password:password.value},
+    });
+    if (updated.status === 401) {
+      closePasswordRecovery();
+      historyStatus.textContent = 'Solicita un nuevo código de recuperación.';
+      return;
+    }
+    if (!updated.ok) throw Error('No se pudo guardar la contraseña. Elige otra o vuelve a intentarlo.');
+    closePasswordRecovery();
+    historyStatus.textContent = 'Contraseña cambiada. Ya puedes iniciar sesión.';
+    historyEmailForm.elements.password.focus();
+  } catch (error) {
+    historyRecoveryHint.textContent = error.message;
+  } finally {
+    button.disabled = $('#historyRecoveryBack').disabled = false;
+  }
+};
+
 historyMore.onclick = () => loadOrderHistory().catch(error => { historyStatus.textContent = error.message; });
 historyLogout.onclick = () => {
   const token = historyToken;
