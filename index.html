@@ -491,7 +491,10 @@ function showStoreSection() {
   const showHistory = location.hash === '#mis-pedidos';
   document.querySelector('main').hidden = showHistory;
   $('#myOrders').hidden = !showHistory;
-  if (showHistory) $('#myOrders').scrollIntoView();
+  if (showHistory) {
+    $('#myOrders').scrollIntoView();
+    if (historyToken) loadOrderHistory(true).catch(error => { historyStatus.textContent = error.message; });
+  }
   else if (location.hash === '#catalogo') $('#catalogo').scrollIntoView();
 }
 $('#myOrdersButton').onclick = () => { location.hash = 'mis-pedidos'; };
@@ -516,18 +519,24 @@ function clearOrderHistory() {
   historyCodeForm.hidden = historyMore.hidden = historyLogout.hidden = true;
 }
 
-async function loadOrderHistory() {
+let historyRequestVersion = 0;
+async function loadOrderHistory(refresh = false) {
+  const requestVersion = ++historyRequestVersion;
   const token = historyToken;
-  const body = historyCursor ? {before_date: historyCursor.created_at, before_id: historyCursor.order_id} : {};
+  const body = !refresh && historyCursor ? {before_date: historyCursor.created_at, before_id: historyCursor.order_id} : {};
   historyMore.disabled = true;
   try {
     const result = await clubRequest('/rest/v1/rpc/bm_pinto_my_orders', {token, body});
-    if (token !== historyToken) return;
+    if (token !== historyToken || requestVersion !== historyRequestVersion) return;
     if (result.status === 401) {
       clearOrderHistory();
       throw Error('La sesión ha caducado. Solicita otro código.');
     }
     if (!result.ok || !Array.isArray(result.data)) throw Error('No se han podido cargar los pedidos.');
+    if (refresh) {
+      historyList.replaceChildren();
+      historyCursor = null;
+    }
     const page = result.data.slice(0, 20);
     const states = {awaiting_transfer:'Pendiente de pago',receipt_received:'Justificante recibido',confirmed:'Pago confirmado'};
     for (const order of page) {
@@ -540,7 +549,7 @@ async function loadOrderHistory() {
       const lines = document.createElement('ul');
       for (const line of order.lines) {
         const item = document.createElement('li');
-        item.textContent = [line.garment, line.color, line.size, line.quantity + ' ud.'].filter(Boolean).join(' · ');
+        item.textContent = [line.garment, line.color, line.size, line.quantity + ' ud.', line.printed_number && 'Dorsal ' + line.printed_number].filter(Boolean).join(' · ');
         lines.append(item);
       }
       row.append(title, summary, lines);
@@ -566,7 +575,7 @@ async function loadOrderHistory() {
     historyMore.hidden = result.data.length <= 20;
     historyStatus.textContent = historyCursor ? '' : 'Todavía no hay pedidos para este correo.';
   } finally {
-    historyMore.disabled = false;
+    if (requestVersion === historyRequestVersion) historyMore.disabled = false;
   }
 }
 
