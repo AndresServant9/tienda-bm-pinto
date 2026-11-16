@@ -314,7 +314,7 @@ $('#checkoutForm').onsubmit = async event => {
     clearMemberValidation();
     $('#checkoutTariff').textContent = '';
     updateGuestCheckoutMode();
-    status.textContent = 'Pedido ' + result.reference + ' guardado en Supabase. Total: ' + money(result.total_cents / 100) + '.' + receiptMessage;
+    status.textContent = 'Pedido recibido. Referencia ' + result.reference + '. Total ' + money(result.total_cents / 100) + '.' + receiptMessage + (checkoutLive ? ' El club revisará el pago.' : '');
   } catch (error) {
     status.textContent = error.message;
   } finally {
