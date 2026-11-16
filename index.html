@@ -201,6 +201,10 @@ let checkoutLive = false;
 let checkoutPrepared = false;
 let checkoutPreparation = 0;
 
+function isPublishedStore() {
+  return ['https://andresservant9.github.io', 'https://tienda-bm-pinto.pages.dev'].includes(location.origin);
+}
+
 async function prepareCheckout() {
   const version = ++checkoutPreparation;
   const button = $('#checkoutSubmit');
@@ -215,7 +219,7 @@ async function prepareCheckout() {
     updateGuestCheckoutMode();
     updateCheckoutTariff();
     if (checkoutLive) {
-      if (location.origin !== 'https://andresservant9.github.io') throw Error('Abre la tienda publicada para pagar por transferencia.');
+      if (!isPublishedStore()) throw Error('Abre la tienda publicada para pagar por transferencia.');
       const code = pendingGuestReceipt?.receiptCode || await getGuestCheckoutCode();
       const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code));
       if (version !== checkoutPreparation) return;
@@ -248,8 +252,8 @@ $('#checkoutForm').onsubmit = async event => {
   status.textContent = 'Guardando pedido…';
   try {
     if (guest && !file) throw Error('Selecciona el justificante para enviar el pedido.');
-    if (guest && location.origin !== 'https://andresservant9.github.io') {
-      throw Error('Abre la tienda publicada en GitHub Pages para subir el justificante.');
+    if (guest && !isPublishedStore()) {
+      throw Error('Abre la tienda publicada para subir el justificante.');
     }
     receiptValid(file);
     let result = pendingGuestReceipt;
