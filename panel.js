@@ -358,10 +358,12 @@ function render() {
             'Total ' + money.format(account.total), 'Confirmado ' + money.format(account.confirmed),
             'En revisión ' + money.format(account.in_review), 'Pendiente ' + money.format(account.pending)].join(' · ');
         const installments = document.createElement('ul');
+        let visibleInstallment = 0;
         for (const payment of account.installments) {
+          if (Number(payment.amount) <= 0) continue;
           const line = document.createElement('li');
           line.className = 'payment-row';
-          line.append(item('span', (payment.due_on ? 'Cuota ' + payment.installment + ' · ' + payment.due_on.split('-').reverse().join('/') : 'Ingreso sin vencimiento · ' + date.format(new Date(payment.confirmed_at))) + ' · ' +
+          line.append(item('span', (payment.due_on ? 'Pago ' + (++visibleInstallment) + ' · ' + payment.due_on.split('-').reverse().join('/') : 'Ingreso sin vencimiento · ' + date.format(new Date(payment.confirmed_at))) + ' · ' +
             money.format(payment.amount) + ' · ' + statuses[payment.status]));
           if (payment.status === 'pending' || payment.status === 'in_review') {
             const button = item('button', 'Confirmar ingreso');
