@@ -162,6 +162,13 @@ if (typeof document !== 'undefined') {
     clubSession = session ? {email:session.user.email.toLowerCase(), token:session.access_token} : null;
     if (clubSession) accountEmail.value = clubSession.email;
     accountEmail.readOnly = Boolean(clubSession);
+    accountEmail.closest('label').hidden = Boolean(clubSession);
+    const accountHint = accountFields.querySelector('p');
+    if (accountHint) accountHint.textContent = clubSession
+      ? 'La inscripción se guardará en tu cuenta del club. No necesitas volver a iniciar sesión.'
+      : 'Introduce el correo y la contraseña de tu cuenta del club.';
+    const recoveryLink = accountFields.querySelector('a[href*="recuperar-cuenta"]');
+    if (recoveryLink) recoveryLink.hidden = Boolean(clubSession);
     accountPassword.closest('label').hidden = Boolean(clubSession);
     document.querySelector('#createRegistrationAccount').hidden = Boolean(clubSession);
     const title = accountFields.querySelector('h3');
