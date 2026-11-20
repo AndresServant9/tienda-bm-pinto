@@ -837,8 +837,13 @@ let memberSearchRevision = 0;
 let memberDocumentIds = null;
 let memberLookupBusy = false;
 let memberActionBusy = false;
+let memberManagementReady = false;
 function membershipState(row) {
-  return row.rejected_at ? 'rejected' : row.approved_at ? 'approved' : row.awaiting_receipt ? 'awaiting' : 'pending';
+  return row.archived_at ? 'archived' : row.rejected_at ? 'rejected' : row.approved_at ? 'approved' : row.awaiting_receipt ? 'awaiting' : 'pending';
+}
+function applyMemberManagement(metadata) {
+  const byId = new Map(metadata.map(row => [row.id, row]));
+  for (const row of memberRows) Object.assign(row, byId.get(row.id) || {});
 }
 function memberDocumentQuery() {
   const normalized = get('memberSearch').value.replace(/[\s.-]/g, '').toUpperCase();
@@ -849,7 +854,7 @@ function filteredMembers() {
   const state = get('memberState').value;
   const kind = get('memberKind').value;
   const byDocument = Boolean(memberDocumentQuery());
-  return memberRows.filter(row => (!state || membershipState(row) === state) && (!kind || row.kind === kind) &&
+  return memberRows.filter(row => (state ? membershipState(row) === state : !row.archived_at) && (!kind || row.kind === kind) &&
     (byDocument ? memberDocumentIds?.has(row.id) : !query ||
       searchableName([row.profile?.fullName, row.profile?.email].filter(Boolean).join(' ')).includes(query)));
 }
@@ -865,9 +870,26 @@ function renderMembers() {
   const requests = pagination.entries;
   list.replaceChildren();
   const counts = state => memberRows.filter(row => membershipState(row) === state).length;
-  get('membershipCounts').textContent = memberLoaded ? memberRows.length + ' solicitudes en total · ' +
-    counts('pending') + ' pendientes de validar · ' + counts('awaiting') + ' pendientes de justificante · ' +
-    counts('approved') + ' validadas · ' + counts('rejected') + ' rechazadas' : '';
+  const countFilters = get('membershipCountFilters');
+  countFilters.replaceChildren();
+  if (memberLoaded) for (const [state, label] of [['pending','Por validar'],['awaiting','Sin justificante'],
+    ['approved','Validadas'],['rejected','Rechazadas'],['','Todas sin archivar'],['archived','Archivadas']]) {
+    const button = item('button', '');
+    button.type = 'button';
+    button.append(item('strong', state ? counts(state) : memberRows.filter(row => !row.archived_at).length), label);
+    button.setAttribute('aria-pressed', String(get('memberState').value === state));
+    button.disabled = memberLookupBusy;
+    button.onclick = () => {get('memberState').value = state; memberPage = 1; status.textContent = ''; renderMembers();};
+    countFilters.append(button);
+  }
+  get('membershipCounts').textContent = memberLoaded ? 'Mostrando ' + requests.length + ' de ' + memberRows.length +
+    ' solicitudes en total · ' + filtered.length + ' coinciden con los filtros.' : '';
+  const selectedState = get('memberState').value;
+  get('membershipHelp').hidden = !memberLoaded || !['awaiting','rejected','archived'].includes(selectedState);
+  get('membershipHelp').textContent = selectedState === 'awaiting'
+    ? 'Estas solicitudes todavía no tienen justificante y no se pueden validar. Si una solicitud se ha abandonado, puedes cancelarla para liberar su reserva de descuento.'
+    : selectedState === 'archived' ? 'Las archivadas no aparecen en el listado habitual. Sacarlas del archivo las devuelve a Rechazadas; no las valida ni reactiva.'
+    : 'Puedes archivar las rechazadas para retirarlas del listado habitual. Se conservarán sus datos y justificantes.';
   get('memberPrevious').disabled = memberPage === 1 || memberLookupBusy;
   get('memberNext').disabled = memberPage === pagination.pages || memberLookupBusy;
   get('memberPageInformation').textContent = memberLookupBusy ? 'Buscando DNI/NIE…' : !memberLoaded ? 'Consulta las solicitudes para empezar.' :
@@ -941,13 +963,15 @@ function renderMembers() {
       approve.type = 'button';
       approve.hidden = Boolean(request.approved_at || request.rejected_at || request.awaiting_receipt ||
         (request.kind === 'renew' && (!request.previous_member || !request.profile?.email)));
-      const rejectRequest = item('button', 'Rechazar solicitud');
+      const rejectRequest = item('button', request.awaiting_receipt ? 'Cancelar solicitud incompleta' : 'Rechazar solicitud');
       rejectRequest.type = 'button';
       rejectRequest.className = 'secondary';
       rejectRequest.hidden = Boolean(request.approved_at || request.rejected_at);
       rejectRequest.onclick = async () => {
         if (memberActionBusy) return;
-        if (!window.confirm('¿Rechazar esta solicitud? El socio podrá enviar una nueva con el mismo documento.')) return;
+        if (!window.confirm(request.awaiting_receipt
+          ? '¿Cancelar esta solicitud sin justificante? Se liberará su reserva de descuento y podrá enviarse una nueva con el mismo documento.'
+          : '¿Rechazar esta solicitud? El socio podrá enviar una nueva con el mismo documento.')) return;
         memberActionBusy = true;
         approve.disabled = rejectRequest.disabled = true;
         try {
@@ -961,6 +985,27 @@ function renderMembers() {
           if (token === session && entry.isConnected) status.textContent = 'No se pudo rechazar. Consulta de nuevo las solicitudes.';
         } finally {
           approve.disabled = rejectRequest.disabled = false;
+          memberActionBusy = false;
+          if (token === session) renderMembers();
+        }
+      };
+      const archiveRequest = item('button', request.archived_at ? 'Sacar del archivo' : 'Archivar solicitud');
+      archiveRequest.type = 'button';
+      archiveRequest.className = 'secondary';
+      archiveRequest.hidden = !memberManagementReady || !request.rejected_at || Boolean(request.approved_at);
+      archiveRequest.onclick = async () => {
+        if (memberActionBusy) return;
+        memberActionBusy = true;
+        archiveRequest.disabled = true;
+        try {
+          const metadata = await rpc('bm_pinto_manage_membership_requests', {p_id: request.id, p_archived: !request.archived_at});
+          if (token !== session) return;
+          const wasArchived = Boolean(request.archived_at);
+          applyMemberManagement(metadata);
+          status.textContent = wasArchived ? 'Solicitud devuelta a Rechazadas.' : 'Solicitud archivada. Puedes recuperarla en Archivadas.';
+        } catch {
+          if (token === session) status.textContent = 'No se pudo cambiar el archivo. Actualiza las solicitudes antes de reintentarlo.';
+        } finally {
           memberActionBusy = false;
           if (token === session) renderMembers();
         }
@@ -1026,10 +1071,18 @@ function renderMembers() {
         }
       };
       entry.append(item('strong', title), item('p', 'Referencia SOCIO-' + request.id));
+      if (request.received_at) {
+        const days = Math.max(0, Math.floor((Date.now() - new Date(request.received_at).getTime()) / 86400000));
+        const age = item('p', 'Recibida el ' + date.format(new Date(request.received_at)) +
+          (request.awaiting_receipt && !request.rejected_at ? ' · ' + (days ? days + (days === 1 ? ' día' : ' días') : 'Menos de un día') + ' sin justificante' : ''));
+        age.className = 'member-age';
+        entry.append(age);
+      }
+      if (request.archived_at) entry.append(item('p', 'Archivada el ' + date.format(new Date(request.archived_at))));
       if (request.profile?.email) entry.append(item('p', request.profile.email));
       if (!approve.hidden) entry.append(item('p', campaign
         ? 'Al validar se enviará el carné al correo del socio.' : 'Esta solicitud está configurada para una comprobación interna; el carné no se enviará al socio.'));
-      entry.append(result, discounts, download, ' ', approve, ' ', rejectRequest, ' ', sendCard, cardStatus);
+      entry.append(result, discounts, download, ' ', approve, ' ', rejectRequest, ' ', archiveRequest, ' ', sendCard, cardStatus);
       list.append(entry);
     }
 }
@@ -1065,14 +1118,17 @@ async function loadMembers() {
   button.disabled = true;
   get('membershipRequestStatus').textContent = 'Consultando solicitudes…';
   try {
-    const [requests, routes] = await Promise.all([
+    const [requests, routes, management] = await Promise.all([
       rpc('bm_pinto_review_membership_test', {p_id: null}), rpc('bm_pinto_membership_card_routes', {}),
+      rpc('bm_pinto_manage_membership_requests', {}).catch(() => null),
     ]);
     if (token !== session || revision !== memberLoadRevision) return;
     memberRows = requests;
     memberRoutes = routes;
+    memberManagementReady = Array.isArray(management);
+    if (memberManagementReady) applyMemberManagement(management);
     memberLoaded = true;
-    get('membershipRequestStatus').textContent = '';
+    get('membershipRequestStatus').textContent = memberManagementReady ? '' : 'La gestión de archivo no está disponible. Actualiza las solicitudes o contacta con el administrador.';
     if (memberDocumentQuery()) await searchMembers();
     else renderMembers();
   } catch {
@@ -1083,7 +1139,9 @@ async function loadMembers() {
 }
 get('loadMembershipRequests').onclick = loadMembers;
 get('memberSearch').addEventListener('input', searchMembers);
-for (const id of ['memberState', 'memberKind']) get(id).addEventListener('change', () => {memberPage = 1; renderMembers();});
+for (const id of ['memberState', 'memberKind']) get(id).addEventListener('change', () => {
+  memberPage = 1; get('membershipRequestStatus').textContent = ''; renderMembers();
+});
 get('clearMemberFilters').onclick = () => {
   get('memberSearch').value = '';
   get('memberState').value = 'pending';
@@ -1113,12 +1171,15 @@ function clearPanelSession() {
   memberDocumentIds = null;
   memberLookupBusy = false;
   memberActionBusy = false;
+  memberManagementReady = false;
   get('memberSearch').value = '';
   get('memberState').value = 'pending';
   get('memberKind').value = '';
   get('membershipRequests').replaceChildren();
   get('membershipRequestStatus').textContent = '';
   get('membershipCounts').textContent = '';
+  get('membershipCountFilters').replaceChildren();
+  get('membershipHelp').hidden = true;
   revision++;
   token = '';
   rows = [];

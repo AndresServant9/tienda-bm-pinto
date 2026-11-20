@@ -74,6 +74,12 @@
   #membershipRequests > li { padding: 1rem; margin: .8rem 0; background: #faf9f7; border: 1px solid #e4e0da; border-radius: .75rem; }
   #membershipRequests button { margin: .25rem .25rem .25rem 0; }
   #membershipCounts { color: #534d47; }
+  .member-count-filters { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1rem 0; }
+  .member-count-filters button { background: #faf9f7; border-color: #e4e0da; color: #242424; text-align: left; }
+  .member-count-filters button[aria-pressed="true"] { background: #a60832; color: white; border-color: #a60832; }
+  .member-count-filters strong { display: block; font-size: 1.25rem; }
+  .member-age { font-size: .88rem; color: #534d47; }
+  .member-help { padding: .75rem; background: #f6f4ef; border-radius: .55rem; }
 </style>
 
 <style>
@@ -196,14 +202,16 @@ header.club-header { display: flex; flex-wrap: wrap; align-items: center; gap: 1
       <summary>Solicitudes de socios 2027/2028</summary>
       <div class="filter-grid">
         <label>Nombre, correo o DNI/NIE completo<input id="memberSearch" type="search" autocomplete="off"></label>
-        <label>Estado<select id="memberState"><option value="pending">Pendientes de validar</option><option value="awaiting">Pendientes de justificante</option><option value="approved">Validadas</option><option value="rejected">Rechazadas</option><option value="">Todos los estados</option></select></label>
+        <label>Estado<select id="memberState"><option value="pending">Pendientes de validar</option><option value="awaiting">Pendientes de justificante</option><option value="approved">Validadas</option><option value="rejected">Rechazadas</option><option value="">Todos sin archivar</option><option value="archived">Archivadas</option></select></label>
         <label>Trámite<select id="memberKind"><option value="">Altas y renovaciones</option><option value="new">Alta</option><option value="renew">Renovación</option></select></label>
       </div>
       <div class="actions" style="margin-top:1rem">
         <button id="loadMembershipRequests" type="button">Actualizar solicitudes</button>
         <button id="clearMemberFilters" type="button" class="secondary">Limpiar filtros</button>
       </div>
-      <p id="membershipCounts"></p>
+      <div id="membershipCountFilters" class="member-count-filters" role="group" aria-label="Filtrar solicitudes por estado"></div>
+      <p id="membershipCounts" role="status"></p>
+      <p id="membershipHelp" class="member-help" hidden></p>
       <p id="membershipRequestStatus" role="status"></p>
       <nav class="pagination" aria-label="Páginas de solicitudes de socios">
         <button id="memberPrevious" type="button" class="secondary" disabled>Anterior</button>
