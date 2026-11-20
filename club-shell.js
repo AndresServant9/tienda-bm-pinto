@@ -20,6 +20,7 @@
   function showVerification() {
     const result = auth.emailVerification?.();
     if (!result) return;
+    if((result.ok||result.sessionActive)&&auth.current()?.user?.email!==result.email){verificationNotice.hidden=true;return;}
     verificationNotice.hidden = false;
     verificationNotice.replaceChildren();
     const title=document.createElement('strong'),text=document.createElement('p');
@@ -44,6 +45,7 @@
   function open() { status.textContent = ''; dialog.showModal(); form.elements.email.focus(); }
   async function render() {
     const version = ++revision, session = auth.current();
+    showVerification();
     const name = bar.querySelector('.club-account-name'); name.hidden = !session;
     name.textContent = session?.user?.email || '';
     bar.querySelector('[data-login]').hidden = Boolean(session);
