@@ -1,8 +1,7 @@
 (() => {
   'use strict';
   const auth = window.ClubAuth;
-  // La tienda ya es pública; las nuevas áreas siguen en revisión hasta su apertura.
-  const restrictedStorefront = location.pathname === '/' || location.pathname === '/index.html';
+  const restrictedStorefront = false;
   const host = document.querySelector('header')?.parentElement || document.querySelector('main') || document.body;
   const bar = document.createElement('div'); bar.className = 'club-account-bar';
   bar.innerHTML = `<a href="/#mis-pedidos" data-public-orders>Mis pedidos</a><button type="button" class="club-primary" data-login>Iniciar sesión</button>
@@ -13,6 +12,25 @@
         <button type="button" data-logout>Cerrar sesión</button>
       </div></details><button type="button" data-install hidden>Instalar app</button>`;
   host.prepend(bar);
+  const verificationNotice = document.createElement('section');
+  verificationNotice.className = 'club-verification-notice';
+  verificationNotice.hidden = true;
+  verificationNotice.setAttribute('role','status');
+  bar.after(verificationNotice);
+  function showVerification() {
+    const result = auth.emailVerification?.();
+    if (!result) return;
+    verificationNotice.hidden = false;
+    verificationNotice.replaceChildren();
+    const title=document.createElement('strong'),text=document.createElement('p');
+    title.textContent=result.ok?'¡Bienvenido al Club Balonmano Pinto!':'No se ha podido completar la verificación';
+    text.textContent=result.ok?'Tu correo está verificado y ya has iniciado sesión con '+result.email+'. Crear la cuenta no envía una inscripción ni un alta de socio. Puedes continuar el trámite que necesites.':result.message;
+    verificationNotice.append(title,text);
+    if(result.needsIdentifier){const hint=document.createElement('p');hint.textContent='No se pudo guardar el DNI/NIE. Contacta con el club si no aparece tu descuento de socio.';verificationNotice.append(hint);}
+    for(const [label,url] of [['Continuar inscripción','/inscripciones'],['Hacerme socio','/socios'],['Ver mis inscripciones','/mis-inscripciones']]){const link=document.createElement('a');link.href=url;link.textContent=label;verificationNotice.append(link);}
+  }
+  window.addEventListener('club-email-verified',showVerification);
+  auth.getSession().then(showVerification).catch(()=>{});
   const dialog = document.createElement('dialog'); dialog.id = 'clubLoginDialog';
   dialog.setAttribute('aria-labelledby','clubLoginTitle');
   dialog.innerHTML = '<h2 id="clubLoginTitle">Tu cuenta del club</h2><p>Una misma cuenta para tus pedidos, inscripciones y solicitudes de socio.</p><form id="clubCommonLogin"><label>Correo de la cuenta<input name="email" type="email" autocomplete="username" required></label><label>Contraseña<input name="password" type="password" autocomplete="current-password" required></label><div class="club-dialog-actions"><button type="submit">Iniciar sesión</button><button type="button" data-close>Cerrar</button></div></form><p id="clubLoginStatus" role="status"></p><p><a href="/recuperar-cuenta">He olvidado mi contraseña</a></p><p><a href="/?crear-cuenta=1#mis-pedidos" data-create-account>No tengo cuenta · Crear cuenta del club</a></p>';

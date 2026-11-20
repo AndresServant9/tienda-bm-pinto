@@ -29,13 +29,20 @@
     }
   });
   auth.subscribe(updateOrdersLayout);updateOrdersLayout();
-  const membershipLinks=[...document.querySelectorAll('a[href*="forms.gle"]')].map(link=>({link,href:link.getAttribute('href'),target:link.getAttribute('target'),label:link.getAttribute('aria-label')}));
-  window.addEventListener('club-access',event=>{
-    for(const entry of membershipLinks){
-      entry.link.href=event.detail.admin?'/socios':entry.href;
-      if(event.detail.admin)entry.link.removeAttribute('target');else if(entry.target)entry.link.setAttribute('target',entry.target);
-      if(entry.label)entry.link.setAttribute('aria-label',event.detail.admin?'Hazte socio del club':entry.label);
-    }
+  for(const link of document.querySelectorAll('a[href*="forms.gle"]')){
+    link.href='/socios';link.removeAttribute('target');link.setAttribute('aria-label','Hazte socio del club');
+  }
+  const delivery=document.createElement('p');delivery.className='club-delivery-estimate';
+  delivery.textContent='Plazo estimado de entrega del proveedor Stratio: 6 semanas.';
+  const motto=document.createElement('p');motto.className='club-motto';motto.textContent='#ContigoSomosMasGrandes';
+  document.querySelector('.hero>div').append(delivery,motto);
+  document.getElementById('grid').addEventListener('click',event=>{
+    if(event.target.closest('[data-product]')?.dataset.product!=='4')return;
+    const variant=document.getElementById('variant');
+    if(variant.querySelector('[name=printName]'))return;
+    const label=document.createElement('label');label.textContent='Nombre para imprimir (opcional)';
+    const input=document.createElement('input');input.name='printName';input.maxLength=30;input.placeholder='Tal como quieres que aparezca';
+    label.append(input);variant.append(label);
   });
   const originalOpen = openOrderHistory;
   let currentToken = '', revision = 0, storeUserId=null;

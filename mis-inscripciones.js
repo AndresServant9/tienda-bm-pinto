@@ -241,7 +241,7 @@ refreshEnrollments.onclick = async () => {
     if (token !== session) return;
     setMessage(rows.length
       ? 'Estado actualizado.'
-      : 'Tu cuenta todavía no tiene inscripciones vinculadas.', rows.length ? 'success' : 'info');
+      : 'Todavía no has enviado inscripciones desde esta aplicación. Consulta también el archivo del formulario anterior.', rows.length ? 'success' : 'info');
   } catch {
     if (token === session) setMessage('No se pudo actualizar. Si la sesión ha caducado, vuelve a entrar.', 'error');
   } finally {
@@ -264,7 +264,7 @@ async function applyFamilySession(session) {
   setMessage('Cargando tus inscripciones y solicitudes de socio…');
   try {
     const rows = await loadEnrollments(next);
-    if (token === next) setMessage(rows.length ? '' : 'Tu cuenta todavía no tiene inscripciones vinculadas.');
+    if (token === next) setMessage(rows.length ? '' : 'Todavía no has enviado inscripciones desde esta aplicación. Consulta también el archivo del formulario anterior.');
   } catch { if (token === next) setMessage('No se pudieron cargar las inscripciones. Pulsa Actualizar estado.', 'error'); }
 }
 form.onsubmit = async event => {

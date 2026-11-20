@@ -6,6 +6,7 @@
   const storageKey = 'bm-pinto-club-session-v1';
   const epochKey = storageKey + '-logout';
   let memory = null, refreshing = null;
+  let emailLinkTask = null, emailLinkStatus = null;
   const listeners = new Set();
   function read() {
     let raw;
@@ -38,7 +39,7 @@
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       const error = Error(response.status === 429 ? 'Demasiados intentos. Espera un minuto.' :
-        response.status === 400 || response.status === 401 ? 'No se pudo iniciar sesión. Revisa el correo, la contraseña y la verificación del correo.' : 'No se pudo conectar con el club. Inténtalo de nuevo.');
+        response.status === 400 || response.status === 401 ? 'Correo o contraseña incorrectos. Si todavía no tienes cuenta, pulsa «Crear cuenta». Si acabas de registrarte, verifica tu correo.' : 'No se pudo conectar con el club. Inténtalo de nuevo.');
       error.status = response.status; error.code = data.code; error.serverMessage = data.message; throw error;
     }
     return data;
@@ -76,6 +77,7 @@
     }
   }
   async function getSession() {
+    if (emailLinkTask) await emailLinkTask;
     if (navigator.locks) return navigator.locks.request(storageKey, refresh);
     if (!refreshing) refreshing = refresh().finally(() => { refreshing = null; });
     return refreshing;
@@ -96,10 +98,44 @@
   async function isAdmin() {
     try { return await authorized('/rest/v1/rpc/bm_pinto_is_admin', {}) === true; } catch { return false; }
   }
+  async function acceptEmailLink() {
+    const fragment = new URLSearchParams(location.hash.slice(1));
+    const query = new URLSearchParams(location.search);
+    const type = fragment.get('type') || query.get('type');
+    if (type === 'recovery') {
+      if (!location.pathname.startsWith('/recuperar-cuenta')) location.replace('/recuperar-cuenta' + location.search + location.hash);
+      return;
+    }
+    if (!fragment.has('access_token') && !query.has('token_hash') && !fragment.has('error') && !query.has('error')) return;
+    history.replaceState(null, '', location.pathname + (location.pathname === '/' ? '#mis-pedidos' : ''));
+    try {
+      if (fragment.has('error') || query.has('error')) throw Error('El enlace no es válido o ha caducado. Inicia sesión si ya verificaste el correo o solicita otro enlace.');
+      if (type && !['signup','email','magiclink'].includes(type)) throw Error('Este enlace no corresponde a la verificación de una cuenta.');
+      let data;
+      if (query.get('token_hash')) data = await request('/auth/v1/verify', {type:'email', token_hash:query.get('token_hash')});
+      else data = {access_token:fragment.get('access_token'),refresh_token:fragment.get('refresh_token'),expires_in:fragment.get('expires_in')};
+      if (!data.access_token || !data.refresh_token) throw Error('No se pudo recuperar la sesión del enlace. Inicia sesión con tu correo y contraseña.');
+      const session = await acceptSession(data);
+      const identifier = session.user.user_metadata?.club_identifier_pending;
+      let needsIdentifier = false;
+      if (identifier) {
+        try {
+          await request('/rest/v1/rpc/bm_pinto_save_customer_identifier', {identifier}, session.access_token);
+          await request('/auth/v1/user', {data:{club_identifier_pending:null}}, session.access_token, 'PUT');
+        } catch { needsIdentifier = true; }
+      }
+      emailLinkStatus = {ok:true,email:session.user.email,needsIdentifier};
+    } catch (error) {
+      emailLinkStatus = {ok:false,message:error.message};
+    }
+    window.dispatchEvent(new Event('hashchange'));
+    window.dispatchEvent(new Event('club-email-verified'));
+  }
   window.addEventListener('focus', () => { getSession().catch(() => {}); });
   window.addEventListener('pageshow', () => { getSession().then(notify).catch(notify); });
   setInterval(() => { if (document.visibilityState === 'visible') getSession().catch(() => {}); }, 45000);
   window.addEventListener('storage', event => { if ([storageKey,epochKey].includes(event.key) || event.key === null) notify(); });
-  window.ClubAuth = {getSession, signIn, signOut, acceptSession, authorized, isAdmin,
+  window.ClubAuth = {getSession, signIn, signOut, acceptSession, authorized, isAdmin, emailVerification:()=>emailLinkStatus,
     current:read, subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); }};
+  if (typeof location !== 'undefined' && /access_token|token_hash|(?:^|[?#&])error=/.test(location.hash + location.search)) emailLinkTask = acceptEmailLink();
 })();

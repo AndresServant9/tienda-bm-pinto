@@ -69,6 +69,7 @@ for (const form of [profile, renewal]) {
         });
         if (!response.ok) {
           const error = await response.json().catch(() => ({}));
+          if (error.message?.startsWith('Ya consta como socio en')) throw Error(error.message);
           if (error.message === 'Ya hay una solicitud para este documento') {
             throw Error('Ya hay una solicitud para este documento. Contacta con el club.');
           }
@@ -127,7 +128,7 @@ for (const form of [profile, renewal]) {
           : 'Cuota anual general: 35 €.')
       : 'Renovación comprobada en el histórico de socios · Cuota anual general: 35 €.';
     window.ClubTransfers.render(document.querySelector('#transferDetails'),
-      'SOCIO 2027/2028 ' + (kind === 'new' ? data.fullName.trim() : normalized));
+      'SOCIO 2026/2027 ' + (kind === 'new' ? data.fullName.trim() : normalized));
     clearStatus();
     form.hidden = true;
     receiptStep.hidden = false;
@@ -154,19 +155,19 @@ receiptStep.onsubmit = async event => {
     const response = await fetch(api, {
       method: 'POST',
       headers: {apikey: key, 'Content-Type': 'application/json'},
-      body: JSON.stringify({...draft.submission, p_receipt: encoded, p_privacy: {version:'2027-2028-v3', acknowledged:receiptStep.elements.privacyRead.checked}}),
+      body: JSON.stringify({...draft.submission, p_receipt: encoded, p_privacy: {version:'2026-2027-v3', acknowledged:receiptStep.elements.privacyRead.checked}}),
       signal: AbortSignal.timeout(20000),
     });
     if (!response.ok) {
       const failure = await response.json().catch(() => ({}));
       if (failure.message === 'No se pudo tramitar la solicitud' || failure.code === '23505') {
-        throw Error('Ya hay una solicitud de alta o renovación para este documento en 2027/2028. Contacta con el club si necesitas corregirla.');
+        throw Error('Ya hay una solicitud de alta o renovación para este documento en 2026/2027. Contacta con el club si necesitas corregirla.');
       }
       if (failure.message === 'Formato de justificante no admitido' ||
           failure.message === 'Adjunta un justificante de hasta 5 MB') {
         throw Error('El archivo adjunto debe ser un PDF, JPG o PNG de hasta 5 MB.');
       }
-      if (failure.message === 'El documento no consta en el padrón de 2026/2027' || failure.message === 'El documento no consta en el padrón histórico de socios') {
+      if (failure.message === 'El documento no consta en el padrón de 2025/2026' || failure.message === 'El documento no consta en el padrón histórico de socios') {
         throw Error('El documento no consta en el padrón anterior. Revisa el DNI o NIE o contacta con el club.');
       }
       if (failure.code === 'PGRST202') throw Error('El envío de solicitudes aún no está habilitado en Supabase.');

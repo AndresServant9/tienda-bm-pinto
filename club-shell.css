@@ -78,3 +78,5 @@ header.club-header .club-navigation a{border-color:#ffffff45;min-height:42px}
  #myOrders{margin-top:1rem}
 }
 @media print{.club-account-bar,.club-navigation{display:none!important}}
+
+.club-verification-notice{padding:1rem;margin:0 auto 1rem;max-width:76rem;border:1px solid #b6d5c4;background:#edf8f0;border-radius:.75rem;color:#183d29}.club-verification-notice[hidden]{display:none!important}.club-verification-notice p{margin:.5rem 0}.club-verification-notice a{display:inline-block;padding:.55rem .7rem;margin:.25rem .4rem .25rem 0;color:#a60832;background:white;border:1px solid #c9cec9;border-radius:.5rem;font-weight:650}.club-delivery-estimate{font-size:1rem!important}.club-motto{color:#f4df65!important;font-weight:750;font-size:1.1rem!important}

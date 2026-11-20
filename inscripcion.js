@@ -1,14 +1,14 @@
 const season = {
-  year: 2027,
-  singlePaymentCutoff: '2027-07-01',
+  year: 2026,
+  singlePaymentCutoff: '2026-07-01',
   dates: ['antes del 1 de julio', 'antes del 15 de septiembre', 'antes del 24 de diciembre'],
   categories: [
-    {minBirth: 2020, name: 'Prebenjamín', federated: false, installments: [80,150,150]},
-    {minBirth: 2018, name: 'Benjamín', federated: false, installments: [80,150,150]},
-    {minBirth: 2016, name: 'Alevín', federated: true, installments: [80,200,160]},
-    {minBirth: 2014, name: 'Infantil', federated: true, installments: [80,200,160]},
-    {minBirth: 2012, name: 'Cadete', federated: true, installments: [80,200,160]},
-    {minBirth: 2010, name: 'Juvenil', federated: true, installments: [80,200,160]},
+    {minBirth: 2019, name: 'Prebenjamín', federated: false, installments: [80,150,150]},
+    {minBirth: 2017, name: 'Benjamín', federated: false, installments: [80,150,150]},
+    {minBirth: 2015, name: 'Alevín', federated: true, installments: [80,200,160]},
+    {minBirth: 2013, name: 'Infantil', federated: true, installments: [80,200,160]},
+    {minBirth: 2011, name: 'Cadete', federated: true, installments: [80,200,160]},
+    {minBirth: 2009, name: 'Juvenil', federated: true, installments: [80,200,160]},
     {minBirth: 0, name: 'Sénior', federated: true, installments: [80,200,160]},
   ],
 };
@@ -19,7 +19,7 @@ function madridDate(now = new Date()) {
 }
 function singlePaymentDeadline(now = new Date()) {
   return madridDate(now) <= season.singlePaymentCutoff
-    ? 'con vencimiento el 1 de julio de 2027'
+    ? 'con vencimiento el 1 de julio de 2026'
     : 'el día en que envíes la inscripción';
 }
 function categoryFor(date) {
@@ -44,7 +44,7 @@ function calculate(players, member, day = madridDate()) {
     const payments = exempt ? [0,0,0] : [...player.category.installments];
     if (player.hasKit) payments[0] = 0;
     payments[2] -= discount;
-    if (!exempt && day >= '2027-12-01') {
+    if (!exempt && day >= '2026-12-01') {
       const month = Number(day.slice(5, 7));
       const tenths = {12: 8, 1: 7, 2: 6, 3: 5, 4: 4, 5: 3, 6: 2}[month] ?? 2;
       const annual = player.category.installments[1] + player.category.installments[2];
@@ -52,7 +52,7 @@ function calculate(players, member, day = madridDate()) {
         ['Juvenil', 'Sénior'].includes(player.category.name) ? 18760 : 6516;
       const prorated = Math.round(fixed + (annual * 100 - fixed) * tenths / 10) / 100;
       payments.splice(0, 3, Math.max(0, prorated + payments[0] - discount), 0, 0);
-    } else if (day >= '2027-09-15') {
+    } else if (day >= '2026-09-15') {
       payments[0] += payments[1];
       payments[1] = 0;
     }
@@ -79,7 +79,7 @@ if (typeof document !== 'undefined') {
   const form = document.querySelector('#registration');
   const container = document.querySelector('#players');
   const summary = document.querySelector('#summary');
-  const proratedSeason = madridDate() >= '2027-12-01';
+  const proratedSeason = madridDate() >= '2026-12-01';
   document.querySelector('#splitPaymentOption').hidden = proratedSeason;
   document.querySelector('#proratedPaymentNote').hidden = !proratedSeason;
   const reviewStatus = document.querySelector('#reviewStatus');
@@ -236,7 +236,7 @@ if (typeof document !== 'undefined') {
     setStatus(signupStatus, 'Solicitando código…', 'info');
     try {
       const {ok, data} = await accountRequest('/auth/v1/signup', {
-        email, password, data: {store_name: name, store_phone: phone},
+        email, password, data: {store_name: name, store_phone: phone, club_identifier_pending:identifier},
       });
       if (['user_already_exists', 'email_exists'].includes(data.code) || data.identities?.length === 0) {
         accountEmail.value = email;
@@ -594,13 +594,13 @@ if (typeof document !== 'undefined') {
     const undecided = players.some(player => !player.team);
     const now = new Date();
     const day = madridDate(now);
-    if (day > '2028-06-30') {
+    if (day > '2027-06-30') {
       summary.hidden = true;
-      window.alert('La temporada 2027/2028 ya ha finalizado.');
+      window.alert('La temporada 2026/2027 ya ha finalizado.');
       return;
     }
     const calculated = calculate(players, form.elements.member.checked, day);
-    const payment = day >= '2027-12-01' ? 'single' : form.elements.payment.value;
+    const payment = day >= '2026-12-01' ? 'single' : form.elements.payment.value;
     const singleDeadline = singlePaymentDeadline(now);
     const deadlines = [day >= season.singlePaymentCutoff ? 'el día de la inscripción' : season.dates[0], ...season.dates.slice(1)];
     const list = document.querySelector('#breakdown');
@@ -687,7 +687,7 @@ if (typeof document !== 'undefined') {
       })),
     };
     const details = {
-      privacy: {version: '2027-2028-v3', acknowledged: form.elements.privacyRead.checked},
+      privacy: {version: '2026-2027-v3', acknowledged: form.elements.privacyRead.checked},
       contact: {
         name: form.elements.contact.value.trim(),
         email: form.elements.email.value.trim(),
