@@ -371,7 +371,7 @@ if (typeof document !== 'undefined') {
         }
         const failure = await response.json().catch(() => ({}));
         if (failure.code === 'PGRST202') throw Error('El envío de inscripciones no está disponible. Contacta con el club.');
-        if(failure.code==='PT409'&&failure.message?.startsWith('La condición de socio'))throw Error(failure.message);
+        if(failure.code==='PT409')throw Error('No se ha encontrado socio en la temporada actual.');
         if(failure.message==='Revisa los importes de la inscripción')throw Error('El importe ha cambiado. Actualiza el formulario y pulsa Revisar inscripción.');
         if (failure.message === 'Ficha de prueba incorrecta') throw Error('Revisa los datos de contacto, el domicilio y las autorizaciones.');
         if (failure.code === '22P02' || failure.message === 'Jugador de prueba incorrecto') {
@@ -488,7 +488,8 @@ if (typeof document !== 'undefined') {
     const age = ageOnDate(birth);
     const minor = age !== null && age < 18;
     const ownMembership = field(player, 'ownMember');
-    const ownMembershipVisible = age !== null;
+    const ownMembershipVisible = age !== null && age >= 18;
+    if(!ownMembershipVisible)ownMembership.checked=false;
     ownMembership.disabled = !ownMembershipVisible;
     player.querySelector('.own-membership').hidden = !ownMembershipVisible;
     const noPlayerId = field(player, 'noPlayerId');
@@ -593,14 +594,14 @@ if (typeof document !== 'undefined') {
     const checkedPlayers=new Map(),membershipMessages=[];
     const guardianClaim=form.elements.member.checked&&!form.elements.member.disabled;
     const guardianMatches=guardianClaim?await isMember(form.elements.contactIdentifier.value):false;
-    if(guardianClaim)membershipMessages.push(guardianMatches?'Padre/Madre/Tutor: socio comprobado para los menores inscritos.':'El DNI del Padre/Madre/Tutor no consta como socio de esta temporada: no se aplica su descuento.');
+    if(guardianClaim)membershipMessages.push(guardianMatches?'Padre/Madre/Tutor: socio comprobado.':'No se ha encontrado socio en la temporada actual.');
     for(const player of container.children){
       const minor=ageOnDate(field(player,'birth').value)<18;
-      const ownClaim=field(player,'ownMember').checked;
+      const ownClaim=!minor&&!field(player,'ownMember').disabled&&field(player,'ownMember').checked;
       const identifier=field(player,'playerId').disabled?(minor?form.elements.contactIdentifier.value:''):field(player,'playerId').value;
       const ownMatches=ownClaim?await isMember(identifier):false;
       checkedPlayers.set(player,ownMatches||(minor&&guardianMatches));
-      if(ownClaim)membershipMessages.push(field(player,'playerName').value.trim()+': '+(ownMatches?'socio comprobado.':'su DNI no consta como socio de esta temporada.'));
+      if(ownClaim)membershipMessages.push((container.children.length>1?field(player,'playerName').value.trim()+': ':'')+(ownMatches?'Socio comprobado.':'No se ha encontrado socio en la temporada actual.'));
     }
     if(revision!==reviewRevision)throw Error('Has cambiado datos durante la comprobación. Pulsa de nuevo Revisar inscripción.');
     setStatus(memberStatus,'','info');
@@ -637,7 +638,7 @@ if (typeof document !== 'undefined') {
       return;
     }
     const calculated = calculate(players, false, day);
-    memberSummary.textContent=membershipMessages.join(' ')+(membershipMessages.length?' Se descuentan 10 € en la cuota deportiva de cada jugador elegible. Un Padre/Madre/Tutor socio puede beneficiar a todos sus hijos menores, sin límite de hijos. Los mayores de edad deben ser socios ellos mismos.':'');
+    memberSummary.textContent=[...new Set(membershipMessages)].join(' ');
     const payment = day >= '2026-12-01' ? 'single' : form.elements.payment.value;
     const singleDeadline = singlePaymentDeadline(now);
     const deadlines = [day >= season.singlePaymentCutoff ? 'el día de la inscripción' : season.dates[0], ...season.dates.slice(1)];

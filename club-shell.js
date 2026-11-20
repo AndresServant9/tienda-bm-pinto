@@ -46,6 +46,7 @@
   async function render() {
     const version = ++revision, session = auth.current();
     nav.hidden = !session;
+    document.querySelectorAll('[data-guest-store]').forEach(link=>{link.hidden=Boolean(session);});
     showVerification();
     const name = bar.querySelector('.club-account-name'); name.hidden = !session;
     name.textContent = session?.user?.email || '';

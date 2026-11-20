@@ -8,6 +8,7 @@
 @media print{.club-account-bar,.club-navigation,#clubLoginDialog{display:none!important}}
 
 .club-navigation[hidden],.club-nav[hidden]{display:none!important}
+.club-guest-store{display:inline-flex;align-items:center;min-height:44px;padding:.5rem .85rem;border:1px solid #ffffff45;border-radius:.5rem;color:inherit;text-decoration:none;font-weight:650}.club-guest-store[hidden]{display:none!important}header.club-header .club-guest-store{flex-basis:100%;margin-top:.5rem}.club-guest-store:focus-visible{outline:3px solid #f6e34e;outline-offset:3px}
 
 /* Cabecera compacta y menú de cuenta común. */
 .club-account-bar{max-width:1120px;margin:0 auto;padding:.65rem 1rem;flex-wrap:nowrap;gap:.75rem;position:relative;z-index:30;justify-content:flex-end}
