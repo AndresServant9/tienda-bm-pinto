@@ -384,7 +384,7 @@ function render() {
                 get('status').textContent = 'Ingreso confirmado.';
               } catch {
                 if (!details.isConnected) return;
-                get('status').textContent = 'No se pudo confirmar el ingreso. Comprueba que se ha ejecutado el SQL 25.';
+                get('status').textContent = 'No se pudo confirmar el ingreso. Actualiza las cuotas antes de reintentarlo.';
                 button.disabled = false;
               }
             });
@@ -628,7 +628,7 @@ get('checkScheduledReminder').onclick = async event => {
       'Fallidos: ' + run.failed, 'Sin confirmar: ' + run.uncertain, 'Cancelados: ' + run.cancelled].join(' · ')
       : 'El sistema de recordatorios reales todavía no ha registrado ninguna ejecución.';
   } catch {
-    if (token === session) status.textContent = 'No se pudo consultar el estado de los avisos. Comprueba que se ha instalado el SQL 93.';
+    if (token === session) status.textContent = 'No se pudo consultar el estado de los avisos. Vuelve a intentarlo en unos instantes.';
   } finally {
     button.disabled = false;
   }
@@ -1102,7 +1102,7 @@ async function searchMembers() {
     memberDocumentIds = new Set(ids);
   } catch {
     if (token !== session || current !== memberSearchRevision) return;
-    get('membershipRequestStatus').textContent = 'No se pudo buscar el documento. Comprueba que está aplicado el SQL 85 o busca por nombre o correo.';
+    get('membershipRequestStatus').textContent = 'No se pudo buscar el documento. Vuelve a intentarlo o busca por nombre o correo.';
   } finally {
     if (token === session && current === memberSearchRevision) {
       memberLookupBusy = false;

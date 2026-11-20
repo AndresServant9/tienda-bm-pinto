@@ -15,8 +15,6 @@
     {"src":"/icons/maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}
   ],
   "shortcuts": [
-    {"name":"Mis pedidos","url":"/#mis-pedidos"},
-    {"name":"Mis inscripciones","url":"/mis-inscripciones"},
-    {"name":"Socios","url":"/socios"}
+    {"name":"Mis pedidos","url":"/#mis-pedidos"}
   ]
 }
