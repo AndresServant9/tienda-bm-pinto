@@ -33,16 +33,14 @@ function ageOnDate(birth, today = new Date()) {
     (today.getMonth() + 1 === month && today.getDate() < day);
   return today.getFullYear() - year - Number(beforeBirthday);
 }
-function calculate(players, member, day = madridDate(), memberBudget = 20) {
+function calculate(players, member, day = madridDate()) {
   const eligible = players.filter(player => player.team !== 'national' && player.category?.name !== 'Sénior' &&
     player.birth && ageOnDate(player.birth, new Date(day + 'T12:00:00')) < 18);
   const siblings = players.length > 1;
-  let memberDiscounts = 0;
   const lines = players.map(player => {
     const exempt = player.team === 'national';
     const playerMember = player.member ?? member;
-    const memberDiscount = !exempt && playerMember && memberDiscounts * 10 + 10 <= Math.min(20,memberBudget) ? 10 : 0;
-    if (memberDiscount) memberDiscounts++;
+    const memberDiscount = !exempt && playerMember ? 10 : 0;
     const discount = exempt ? 0 : (siblings ? 10 : 0) + memberDiscount;
     const payments = exempt ? [0,0,0] : [...player.category.installments];
     if (player.hasKit) payments[0] = 0;
@@ -61,7 +59,7 @@ function calculate(players, member, day = madridDate(), memberBudget = 20) {
     }
     return {...player, member: playerMember, memberDiscount, discount, payments, total: payments.reduce((sum, value) => sum + value, 0)};
   });
-  return {lines, laterDiscount: Math.min(Math.max(0,Math.min(20,memberBudget)-memberDiscounts*10), eligible.filter(player => !(player.member ?? member)).length * 10)};
+  return {lines, laterDiscount: Math.min(20, eligible.filter(player => !(player.member ?? member)).length * 10)};
 }
 function normalizeIdentifier(value) {
   return String(value || '').replace(/[\s.-]/g, '').toUpperCase();
@@ -374,7 +372,7 @@ if (typeof document !== 'undefined') {
         const failure = await response.json().catch(() => ({}));
         if (failure.code === 'PGRST202') throw Error('El envío de inscripciones no está disponible. Contacta con el club.');
         if(failure.code==='PT409'&&failure.message?.startsWith('La condición de socio'))throw Error(failure.message);
-        if(failure.message==='Revisa los importes de la inscripción')throw Error('El importe o el descuento disponible ha cambiado. Vuelve a editar y pulsa Revisar inscripción con tu sesión iniciada.');
+        if(failure.message==='Revisa los importes de la inscripción')throw Error('El importe ha cambiado. Actualiza el formulario y pulsa Revisar inscripción.');
         if (failure.message === 'Ficha de prueba incorrecta') throw Error('Revisa los datos de contacto, el domicilio y las autorizaciones.');
         if (failure.code === '22P02' || failure.message === 'Jugador de prueba incorrecto') {
           throw Error('No se pudieron validar los datos del pack. Revisa las tallas o contacta con el club.');
@@ -593,13 +591,6 @@ if (typeof document !== 'undefined') {
       return lookupResults.get(normalized);
     }
     const checkedPlayers=new Map(),membershipMessages=[];
-    let memberBudget=20;
-    const activeSession=await window.ClubAuth.getSession();
-    if(activeSession){
-      const response=await accountRequest('/rest/v1/rpc/bm_pinto_registration_member_budget',{},activeSession.access_token);
-      if(!response.ok||!Number.isInteger(response.data)||response.data<0||response.data>20)throw Error('No se pudo comprobar el descuento disponible de tu cuenta. Vuelve a revisar la inscripción.');
-      memberBudget=response.data;
-    }
     const guardianClaim=form.elements.member.checked&&!form.elements.member.disabled;
     const guardianMatches=guardianClaim?await isMember(form.elements.contactIdentifier.value):false;
     if(guardianClaim)membershipMessages.push(guardianMatches?'Padre/Madre/Tutor: socio comprobado para los menores inscritos.':'El DNI del Padre/Madre/Tutor no consta como socio de esta temporada: no se aplica su descuento.');
@@ -645,8 +636,8 @@ if (typeof document !== 'undefined') {
       window.alert('La temporada 2026/2027 ya ha finalizado.');
       return;
     }
-    const calculated = calculate(players, false, day, memberBudget);
-    memberSummary.textContent=membershipMessages.join(' ')+(membershipMessages.length?' El descuento de socio es de 10 € por jugador elegible, con un máximo de 20 € por cuenta familiar y temporada. '+(activeSession?'Disponible antes de este envío: '+euro.format(memberBudget)+'.':'Si ya tienes cuenta, inicia sesión antes de revisar para consultar lo que queda disponible.'):'');
+    const calculated = calculate(players, false, day);
+    memberSummary.textContent=membershipMessages.join(' ')+(membershipMessages.length?' Se descuentan 10 € en la cuota deportiva de cada jugador elegible. Un Padre/Madre/Tutor socio puede beneficiar a todos sus hijos menores, sin límite de hijos. Los mayores de edad deben ser socios ellos mismos.':'');
     const payment = day >= '2026-12-01' ? 'single' : form.elements.payment.value;
     const singleDeadline = singlePaymentDeadline(now);
     const deadlines = [day >= season.singlePaymentCutoff ? 'el día de la inscripción' : season.dates[0], ...season.dates.slice(1)];
