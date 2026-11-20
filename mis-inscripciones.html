@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Mis inscripciones · Club Balonmano Pinto</title>
+<link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#a60832"><link rel="apple-touch-icon" href="/icons/icon-192.png"><link rel="stylesheet" href="/club-shell.css?v=114"><script src="/club-auth.js?v=114" defer></script><script src="/club-shell.js?v=114" defer></script>
+<style>
+  body { margin: 0; background: #f4f2ee; color: #222; font: 1rem system-ui, sans-serif; }
+  main { max-width: 48rem; margin: auto; padding: 1rem; }
+  header, form, article { padding: 1.25rem; border-radius: .75rem; background: white; margin-bottom: 1rem; }
+  header { background: #222; color: white; }
+  h1 { margin: 0; }
+  label { display: block; margin-bottom: .75rem; }
+  input, button { font: inherit; padding: .5rem; }
+  button { background: #b50832; color: white; border: 0; border-radius: .35rem; }
+  h2 { overflow-wrap: anywhere; font-size: 1.1rem; }
+</style>
+
+<style>
+header.club-header { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
+.club-nav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .5rem; flex-basis: 100%; width: 100%; padding-top: .9rem; border-top: 1px solid #ffffff40; }
+.club-nav a { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: .55rem .4rem; border: 1px solid #ffffff45; border-radius: .5rem; color: #fff; font-size: .95rem; font-weight: 650; line-height: 1.3; text-align: center; text-decoration: none; }
+.club-nav a:hover { background: #ffffff20; }
+.club-nav a[aria-current="page"] { background: #fff; color: #242424; border-color: #fff; }
+.club-nav a:focus-visible { outline: 3px solid #f6e34e; outline-offset: 3px; }
+@media (max-width: 520px) { .club-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media print { .club-nav { display: none; } }
+</style>
+<link rel="stylesheet" href="cuenta.css">
+<style>select { font: inherit; max-width: 100%; min-height: 44px; } li { margin-block: .8rem; overflow-wrap: anywhere; } input[type=file] { max-width:100%; } #family > button { margin: .25rem; }</style>
+<main>
+  <header class="club-header"><div>Club Balonmano Pinto<h1>Mis inscripciones</h1></div>
+<nav class="club-nav" aria-label="Navegación del club">
+  <a href="/">Tienda</a>
+  <a href="/">Inscripciones</a>
+  <a href="/panel">Acceso club</a>
+  <a href="/socios">Socios</a>
+</nav>
+</header>
+  <form id="signin">
+    <label>Correo <input type="email" name="email" autocomplete="username" required></label>
+    <label>Contraseña <input type="password" name="password" autocomplete="current-password" required></label>
+    <button>Entrar</button>
+    <p><a href="recuperar-cuenta.html">He olvidado mi contraseña</a></p>
+  </form>
+  <p id="message" class="form-message" role="status"></p>
+  <section id="family" hidden>
+    <button id="refreshEnrollments" type="button">Actualizar estado</button>
+    <button id="signout" type="button">Cerrar sesión</button>
+    <section aria-labelledby="membershipRequestsTitle">
+      <h2 id="membershipRequestsTitle">Mis solicitudes de socio</h2>
+      <p id="membershipRequestsStatus" role="status"></p>
+      <div id="membershipRequests"></div>
+    </section>
+    <label>Mostrar cuotas
+      <select id="familyPaymentFilter">
+        <option value="">Todas</option>
+        <option value="pending">Pendientes</option>
+        <option value="in_review">En revisión</option>
+        <option value="confirmed">Confirmadas</option>
+      </select>
+    </label>
+    <p id="familyFilterEmpty" role="status" hidden>No hay cuotas con ese estado.</p>
+    <p id="membershipDiscount" hidden></p>
+    <div id="enrollments"></div>
+  </section>
+<p><a href="privacidad.html">Privacidad y autorizaciones</a></p>
+</main>
+<script src="justificantes.js?v=103" defer></script>
+<script src="mis-inscripciones.js?v=avisos-movil-108" defer></script>
+</html>
+
+
+
+
+
+
+
+
+

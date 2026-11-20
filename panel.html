@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Gestión del club · Club Balonmano Pinto</title>
+<link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#a60832"><link rel="apple-touch-icon" href="/icons/icon-192.png"><link rel="stylesheet" href="/club-shell.css?v=114"><script src="/club-auth.js?v=114" defer></script><script src="/club-shell.js?v=114" defer></script>
+<style>
+  * { box-sizing: border-box; }
+  body { font: 1rem/1.5 system-ui, sans-serif; background: #f4f2ee; color: #242424; margin: 0; }
+  main { max-width: 76rem; margin: auto; padding: clamp(.85rem, 3vw, 2rem); }
+  header, .surface { padding: clamp(1rem, 3vw, 1.6rem); border-radius: 1rem; margin-bottom: 1rem; }
+  header { display: flex; align-items: center; gap: 1rem; background: #242424; color: white; }
+  header img { width: clamp(2.6rem, 8vw, 4.25rem); height: auto; }
+  header p { margin: 0; color: #f4df65; font-size: .9rem; }
+  h1, h2 { margin: 0; line-height: 1.2; }
+  h1 { font-size: clamp(1.45rem, 4vw, 2.25rem); }
+  h2 { font-size: 1.2rem; }
+  .surface { background: white; border: 1px solid #e4e0da; }
+  .section-heading, .actions, .inline-fields {
+    display: flex; gap: .65rem; flex-wrap: wrap; align-items: center;
+  }
+  .section-heading { justify-content: space-between; margin-bottom: 1rem; }
+  .inline-fields { align-items: end; }
+  .inline-fields label { flex: 1 1 11rem; }
+  .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13.5rem), 1fr)); gap: .85rem; }
+  label { display: grid; grid-template-rows: 1fr auto; gap: .35rem; min-width: 0; font-size: .88rem; font-weight: 650; }
+  .delete-confirmation { display: flex; align-items: center; margin: .6rem 0; }
+  .delete-confirmation input { width: auto; min-height: auto; }
+  input, select, textarea, button { font: inherit; max-width: 100%; border-radius: .55rem; }
+  input, select, textarea { width: 100%; min-width: 0; min-height: 2.75rem; padding: .48rem .65rem; border: 1px solid #aaa49e; background: white; color: inherit; }
+  button { min-height: 2.75rem; padding: .48rem .8rem; background: #a60832; color: white; border: 1px solid transparent; font-weight: 650; cursor: pointer; }
+  button.secondary { background: white; border-color: #b9b4ad; color: #242424; }
+  .exports { margin: 0; min-width: min(100%, 13rem); }
+  .exports > summary { padding: .55rem .8rem; border: 1px solid #b9b4ad; border-radius: .55rem; }
+  .export-options { display: grid; gap: .45rem; margin-top: .5rem; }
+  .export-options button { text-align: left; }
+  #kitExportSummary { color: #534d47; font-size: .85rem; margin: 0; }
+  button:disabled, select:disabled { opacity: .52; cursor: default; }
+  :focus-visible { outline: 2px solid #a60832; outline-offset: 3px; }
+  .toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .85rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e4e0da; }
+  .results { margin-top: 1.25rem; }
+  #count { margin: 0; font-weight: 700; }
+  #filteredPaymentTotals { color: #534d47; margin: .35rem 0; }
+  p[role="status"]:empty, ul:empty, #filteredPaymentTotals:empty { display: none; }
+  #registrations { list-style: none; padding: 0; margin: .85rem 0 0; }
+  #registrations > li { padding: 1rem; border: 1px solid #e4e0da; border-radius: .75rem; background: #faf9f7; margin: .65rem 0; }
+  .registration-players { list-style: none; padding: 0; margin: 0 0 .5rem; }
+  .registration-players li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .65rem; }
+  .registration-players li + li { margin-top: .35rem; }
+  .registration-players span { font-size: .9rem; color: #534d47; }
+  .registration-kit { flex-basis: 100%; color: #534d47; }
+  li { overflow-wrap: anywhere; }
+  #registrations p { margin: .45rem 0; }
+  details { margin-block: .55rem; }
+  summary { cursor: pointer; font-weight: 650; }
+  .payment-row { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; margin: .5rem 0; }
+  .payment-row > span { flex: 1 1 15rem; }
+  .payment-row > details { flex-basis: 100%; }
+  #registrations fieldset { display: flex; flex-wrap: wrap; align-items: end; gap: .65rem; min-width: 0; border: 1px solid #e4e0da; border-radius: .55rem; margin: .6rem 0; }
+  #reminders > summary { font-size: 1.15rem; }
+  #reminderPreview { margin-block: 1rem; }
+  .scheduled { border-top: 1px solid #e4e0da; padding-top: 1rem; margin-top: 1rem; }
+  [hidden] { display: none !important; }
+  .panel-tabs { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .panel-tabs [aria-selected="false"] { background: white; color: #242424; border-color: #b9b4ad; }
+  .panel-navigation { position: sticky; top: 0; z-index: 5; box-shadow: 0 3px 12px #0000000a; }
+  .panel-navigation .section-heading { margin: 0; gap: .75rem; }
+  .pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem; margin: 1rem 0; }
+  .pagination p { margin: 0; }
+  .results-note { font-size: .85rem; color: #534d47; }
+  #registrationList > summary { padding: .65rem 0; }
+  #membershipRequests { list-style: none; padding: 0; }
+  #membershipRequests > li { padding: 1rem; margin: .8rem 0; background: #faf9f7; border: 1px solid #e4e0da; border-radius: .75rem; }
+  #membershipRequests button { margin: .25rem .25rem .25rem 0; }
+  #membershipCounts { color: #534d47; }
+</style>
+
+<style>
+header.club-header { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
+.club-nav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .5rem; flex-basis: 100%; width: 100%; padding-top: .9rem; border-top: 1px solid #ffffff40; }
+.club-nav a { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: .55rem .4rem; border: 1px solid #ffffff45; border-radius: .5rem; color: #fff; font-size: .95rem; font-weight: 650; line-height: 1.3; text-align: center; text-decoration: none; }
+.club-nav a:hover { background: #ffffff20; }
+.club-nav a[aria-current="page"] { background: #fff; color: #242424; border-color: #fff; }
+.club-nav a:focus-visible { outline: 3px solid #f6e34e; outline-offset: 3px; }
+@media (max-width: 520px) { .club-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media print { .club-nav { display: none; } }
+</style>
+<main>
+  <header class="club-header"><img src="escudo.png" alt=""><div><p>Club Balonmano Pinto</p><h1>Gestión del club</h1></div>
+<nav class="club-nav" aria-label="Navegación del club">
+  <a href="/">Tienda</a>
+  <a href="/">Inscripciones</a>
+  <a href="/panel" aria-current="page">Acceso club</a>
+  <a href="/socios">Socios</a>
+</nav>
+</header>
+  <form id="login" class="surface inline-fields">
+    <label>Correo <input type="email" name="email" autocomplete="username" required></label>
+    <label>Contraseña <input type="password" name="password" autocomplete="current-password" required></label>
+    <button>Entrar</button><p><a href="recuperar-cuenta.html">He olvidado mi contraseña</a></p>
+  </form>
+  <p id="status" role="status"></p>
+  <section id="panel" hidden>
+    <div class="surface panel-navigation">
+      <div class="section-heading">
+        <div class="panel-tabs" role="tablist" aria-label="Gestión del club">
+          <button id="tabRegistrations" type="button" role="tab" aria-selected="true" aria-controls="registrationsPane" data-panel-tab="registrationsPane">Inscripciones</button>
+          <button id="tabMembers" type="button" role="tab" aria-selected="false" aria-controls="membersPane" data-panel-tab="membersPane" tabindex="-1">Socios</button>
+          <button id="tabReminders" type="button" role="tab" aria-selected="false" aria-controls="remindersPane" data-panel-tab="remindersPane" tabindex="-1">Recordatorios</button>
+        </div>
+        <button id="logout" class="secondary" type="button">Cerrar sesión</button>
+      </div>
+    </div>
+    <section id="registrationsPane" role="tabpanel" aria-labelledby="tabRegistrations">
+    <section class="surface" aria-labelledby="filterHeading">
+    <div class="section-heading"><h2 id="filterHeading">Buscar inscripciones</h2>
+      <button id="reviewReceipts" class="secondary" type="button">Justificantes por revisar</button>
+    </div>
+    <div class="filter-grid">
+    <label>Equipo <select id="team"><option value="">Todos los equipos</option></select></label>
+    <label>Categoría <select id="categoryFilter"><option value="">Todas las categorías</option></select></label>
+    <label>Pack inicial <select id="kitFilter">
+      <option value="">Todos los jugadores</option>
+      <option value="needed">Necesita el pack</option>
+      <option value="owned">Ya tiene el pack</option>
+    </select></label>
+    <label>Estado del pago <select id="paymentState">
+      <option value="">Todos los estados</option>
+      <option value="pending">Con saldo pendiente</option>
+      <option value="in_review">Con pagos en revisión</option>
+      <option value="confirmed">Con pagos confirmados</option>
+      <option value="settled">Liquidado</option>
+      <option value="agreement_pending">Acuerdo pendiente de concretar</option>
+    </select></label>
+    <label>Jugador, referencia o correo <input id="reference" type="search"></label>
+    <label>Cuenta familiar <select id="accountFilter">
+      <option value="">Todas</option>
+      <option value="linked">Vinculadas</option>
+      <option value="unlinked">Sin vincular</option>
+    </select></label>
+    <label>Modalidad de pago <select id="paymentMode">
+      <option value="">Todas las modalidades</option>
+      <option value="single">Pago único</option>
+      <option value="split">Pago fraccionado</option>
+      <option value="agreement">Acuerdo con el club</option>
+      <option value="demand">Pago a demanda</option>
+    </select></label>
+    <label>Inscripciones desde <input id="registrationFrom" type="date"></label>
+    <label>Vencimiento de cuotas pendientes <select id="dueFilter">
+      <option value="">Cualquier vencimiento</option>
+      <option value="overdue">Vencidas</option>
+      <option value="next7">Hasta 7 días</option>
+    </select></label>
+    <label>Inscripciones hasta <input id="registrationUntil" type="date"></label>
+    </div>
+    <div class="toolbar">
+    <div class="actions">
+    <button id="clearRegistrationFilters" class="secondary" type="button">Limpiar filtros</button>
+    <button id="refresh" type="button">Actualizar</button>
+    </div>
+    <details class="exports">
+      <summary>Exportar a Excel</summary>
+      <div class="export-options">
+        <button id="exportRegistrations" class="secondary" type="button" disabled>Resumen por inscripción</button>
+        <button id="exportInstallments" class="secondary" type="button" disabled>Detalle por cuota</button>
+        <button id="exportPlayers" class="secondary" type="button" disabled>Listado por jugador</button>
+        <button id="exportKits" class="secondary" type="button" disabled>Packs iniciales de ropa (.xlsx)</button>
+        <p id="kitExportSummary"></p>
+      </div>
+    </details>
+    </div>
+    <div class="results">
+    <p id="count" aria-live="polite"></p>
+    <p id="filteredPaymentTotals"></p>
+    <p class="results-note">Se muestran 20 inscripciones por página, de más reciente a más antigua. Los totales y las exportaciones incluyen todos los resultados de los filtros.</p>
+    <nav class="pagination" aria-label="Páginas de inscripciones">
+      <button type="button" class="secondary" data-page-previous>Anterior</button>
+      <p data-page-information role="status"></p>
+      <button type="button" class="secondary" data-page-next>Siguiente</button>
+    </nav>
+    <details id="registrationList" open><summary>Listado de inscripciones</summary>
+    <p id="emptyRegistrations" hidden>No hay inscripciones que coincidan con estos filtros.</p>
+    <ul id="registrations"></ul>
+    </details>
+    <nav class="pagination" aria-label="Páginas de inscripciones al final del listado">
+      <button type="button" class="secondary" data-page-previous>Anterior</button>
+      <p data-page-information></p>
+      <button type="button" class="secondary" data-page-next>Siguiente</button>
+    </nav>
+    </div>
+    </section>
+    </section>
+    <section id="membersPane" role="tabpanel" aria-labelledby="tabMembers" hidden>
+    <details class="surface" open>
+      <summary>Solicitudes de socios 2027/2028</summary>
+      <div class="filter-grid">
+        <label>Nombre, correo o DNI/NIE completo<input id="memberSearch" type="search" autocomplete="off"></label>
+        <label>Estado<select id="memberState"><option value="pending">Pendientes de validar</option><option value="awaiting">Pendientes de justificante</option><option value="approved">Validadas</option><option value="rejected">Rechazadas</option><option value="">Todos los estados</option></select></label>
+        <label>Trámite<select id="memberKind"><option value="">Altas y renovaciones</option><option value="new">Alta</option><option value="renew">Renovación</option></select></label>
+      </div>
+      <div class="actions" style="margin-top:1rem">
+        <button id="loadMembershipRequests" type="button">Actualizar solicitudes</button>
+        <button id="clearMemberFilters" type="button" class="secondary">Limpiar filtros</button>
+      </div>
+      <p id="membershipCounts"></p>
+      <p id="membershipRequestStatus" role="status"></p>
+      <nav class="pagination" aria-label="Páginas de solicitudes de socios">
+        <button id="memberPrevious" type="button" class="secondary" disabled>Anterior</button>
+        <p id="memberPageInformation" role="status">Consulta las solicitudes para empezar.</p>
+        <button id="memberNext" type="button" class="secondary" disabled>Siguiente</button>
+      </nav>
+      <ul id="membershipRequests"></ul>
+    </details>
+    </section>
+    <section id="remindersPane" role="tabpanel" aria-labelledby="tabReminders" hidden>
+    <details id="reminders" class="surface" open>
+      <summary>Vista previa de recordatorios de cuotas</summary>
+      <p>Consulta qué cuotas vencerían 7 días después de la fecha elegida.</p>
+      <p>Los recordatorios se envían 7 días antes del vencimiento, solo para cuotas pendientes. Cada familia recibe un correo con sus cuotas. Los pagos en revisión o confirmados y el pago a demanda quedan excluidos.</p>
+      <p>Esta vista previa no envía correos. El envío automático requiere instalar el SQL 93, desplegar la función de correo y activar la programación con el SQL 94.</p>
+      <form id="reminderPreview" class="inline-fields">
+        <label>Fecha de referencia <input name="previewDate" type="date" required></label>
+        <button>Consultar avisos</button>
+      </form>
+      <p id="reminderStatus" role="status"></p>
+      <ul id="reminderResults"></ul>
+      <div class="scheduled"><button id="checkScheduledReminder" class="secondary" type="button">Consultar estado de los avisos</button>
+      <p id="scheduledReminderStatus" role="status"></p>
+      </div>
+    </details>
+    </section>
+  </section>
+</main>
+<script src="exportar-packs.js?v=c53ae8de7940" defer></script>
+<script src="panel.js?v=recordatorios-reales-93" defer></script>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

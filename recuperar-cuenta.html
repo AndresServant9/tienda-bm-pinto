@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Recuperar cuenta · Club Balonmano Pinto</title>
+<link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#a60832"><link rel="apple-touch-icon" href="/icons/icon-192.png"><link rel="stylesheet" href="/club-shell.css?v=114"><script src="/club-auth.js?v=114" defer></script><script src="/club-shell.js?v=114" defer></script>
+<link rel="stylesheet" href="cuenta.css">
+<main>
+  <header><img src="escudo.png" alt=""><div><p>Club Balonmano Pinto</p><h1>Recuperar tu cuenta</h1></div></header>
+  <section class="surface">
+    <form id="requestRecovery">
+      <h2>¿Has olvidado tu contraseña?</h2>
+      <p>Introduce el correo de tu cuenta del club. Te enviaremos un enlace para elegir una contraseña nueva.</p>
+      <label>Correo de la cuenta<input name="email" type="email" autocomplete="email" maxlength="254" required></label>
+      <button>Enviar enlace de recuperación</button>
+    </form>
+    <form id="changePassword" hidden>
+      <h2>Elige una contraseña nueva</h2>
+      <p>Utilizarás esta misma contraseña en las inscripciones y en la tienda del club.</p>
+      <label>Nueva contraseña<input name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required></label>
+      <small>Al menos 8 caracteres. Evita nombres o fechas fáciles de adivinar.</small>
+      <label>Repetir contraseña<input name="repeat" type="password" autocomplete="new-password" minlength="8" maxlength="128" required></label>
+      <button>Guardar nueva contraseña</button>
+    </form>
+    <p id="recoveryStatus" class="form-message" role="status" tabindex="-1"></p>
+    <nav class="actions" aria-label="Volver al club"><a class="action" href="mis-inscripciones.html">Entrar con mi cuenta</a><a href="inscripciones.html">Volver a la inscripción</a><a href="privacidad.html">Privacidad</a></nav>
+  </section>
+</main>
+<script src="recuperar-cuenta.js?v=96" defer></script>
+</html>

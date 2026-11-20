@@ -1,0 +1,11 @@
+.transfer-details { margin: 1.25rem 0; padding: 1rem; border: 1px solid #d8d2c9; border-radius: .75rem; background: #f8f6f2; }
+.transfer-details h3 { margin: 0 0 .8rem; }
+.transfer-details dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: .5rem 1rem; margin: 0 0 1rem; }
+.transfer-details dt { font-weight: 700; }
+.transfer-details dd { margin: 0; overflow-wrap: anywhere; user-select: text; }
+.transfer-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.transfer-details .transfer-actions button { margin: 0; }
+.transfer-details p { margin-bottom: 0; }
+.transfer-feedback:empty { display: none; }
+@media (max-width: 430px) { .transfer-details dl { grid-template-columns: 1fr; gap: .2rem; } .transfer-details dd { margin-bottom: .6rem; } }
+@media print { .transfer-actions, .transfer-feedback { display: none !important; } }

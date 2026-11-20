@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Socios 2027/2028 · Club Balonmano Pinto</title>
+<link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#a60832"><link rel="apple-touch-icon" href="/icons/icon-192.png"><link rel="stylesheet" href="/club-shell.css?v=114"><script src="/club-auth.js?v=114" defer></script><script src="/club-shell.js?v=114" defer></script>
+<link rel="stylesheet" href="transferencias.css?v=104">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f4f2ee; color: #242424; font: 1rem/1.5 system-ui, sans-serif; }
+  main { max-width: 46rem; margin: auto; padding: 1rem; }
+  header, section { padding: clamp(1rem, 4vw, 1.75rem); border-radius: 1rem; margin: 1rem 0; background: white; }
+  header { background: #242424; color: white; display: flex; align-items: center; gap: 1rem; }
+  header img { width: 3.75rem; }
+  header p { color: #f4df65; margin: 0; }
+  h1, h2 { margin: 0 0 .5rem; line-height: 1.2; }
+  label { display: grid; gap: .35rem; margin: .75rem 0; font-weight: 650; }
+  input, button { font: inherit; padding: .6rem; border-radius: .5rem; }
+  input:not([type="radio"]):not([type="checkbox"]) { width: 100%; border: 1px solid #aaa49e; }
+  label.consent { display: flex; align-items: flex-start; gap: .65rem; }
+  .consent input[type="checkbox"] { flex: 0 0 auto; width: 1.15rem; height: 1.15rem; padding: 0; margin: .2rem 0 0; }
+  .consent span { min-width: 0; }
+  button { border: 0; background: #a60832; color: white; font-weight: 650; cursor: pointer; }
+  button:disabled { opacity: .6; }
+  a { color: #a60832; }
+  .options { display: flex; flex-wrap: wrap; gap: .75rem; border: 0; padding: 0; margin: 0 0 1rem; }
+  .options legend { font-weight: 700; }
+  .options label { display: flex; align-items: center; padding: .45rem .65rem; border: 1px solid #aaa49e; border-radius: .5rem; cursor: pointer; }
+  #status { padding: .85rem 1rem; border: 1px solid #ccc; border-radius: .5rem; background: #f5f3ef; }
+  #status[data-kind="error"] { border: 2px solid #a60832; background: #fff0f3; color: #8a0629; font-weight: 650; }
+  #status[data-kind="success"] { border-color: #28733d; background: #edf8ef; color: #205c32; }
+  [hidden] { display: none !important; }
+</style>
+
+<style>
+header.club-header { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
+.club-nav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .5rem; flex-basis: 100%; width: 100%; padding-top: .9rem; border-top: 1px solid #ffffff40; }
+.club-nav a { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: .55rem .4rem; border: 1px solid #ffffff45; border-radius: .5rem; color: #fff; font-size: .95rem; font-weight: 650; line-height: 1.3; text-align: center; text-decoration: none; }
+.club-nav a:hover { background: #ffffff20; }
+.club-nav a[aria-current="page"] { background: #fff; color: #242424; border-color: #fff; }
+.club-nav a:focus-visible { outline: 3px solid #f6e34e; outline-offset: 3px; }
+@media (max-width: 520px) { .club-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media print { .club-nav { display: none; } }
+</style>
+<main>
+  <header class="club-header"><img src="escudo.png" alt=""><div><p>Club Balonmano Pinto</p><h1>Socios 2027/2028</h1></div>
+<nav class="club-nav" aria-label="Navegación del club">
+  <a href="/">Tienda</a>
+  <a href="/">Inscripciones</a>
+  <a href="/panel">Acceso club</a>
+  <a href="/socios" aria-current="page">Socios</a>
+</nav>
+</header>
+  <p>Cuota anual de socio de 35 €. El club revisará tu justificante y te enviará el carné al validar la solicitud.</p>
+  <p><a href="privacidad.html" target="_blank" rel="noopener noreferrer">Cómo tratamos tus datos personales</a>. Solo se utilizarán para tramitar la solicitud y gestionar tu relación con el club.</p>
+  <section>
+    <fieldset class="options">
+      <legend>Trámite</legend>
+      <label><input type="radio" name="kind" value="new" checked> Alta</label>
+      <label><input type="radio" name="kind" value="renew"> Renovación</label>
+    </fieldset>
+    <form id="profile">
+      <h2>Alta de socio</h2>
+      <label>Nombre y apellidos <input name="fullName" autocomplete="name" maxlength="120" required></label>
+      <label>DNI o NIE <input name="identifier" maxlength="12" required></label>
+      <label>Municipio <input name="town" autocomplete="address-level2" maxlength="100" required></label>
+      <label>Correo electrónico <input name="email" type="email" autocomplete="email" maxlength="254" required></label>
+      <label>Teléfono <input name="phone" type="tel" autocomplete="tel" maxlength="40" required></label>
+      <label>Jugador o miembro del club con quien tienes relación (opcional) <input name="related" maxlength="120"></label>
+      <label>Categoría o equipo del jugador (opcional) <input name="category" maxlength="100"></label>
+      <button type="submit">Revisar alta</button>
+    </form>
+    <form id="renewal" hidden>
+      <h2>Renovar como socio</h2>
+      <label>DNI o NIE del socio <input name="identifier" maxlength="12" required></label>
+      <button type="submit">Revisar renovación</button>
+    </form>
+    <p id="status" role="status" hidden></p>
+    <form id="receiptStep" hidden>
+      <h2>Revisar solicitud y adjuntar justificante</h2>
+      <p id="requestSummary"></p>
+      <div id="transferDetails"></div>
+      <label>Justificante obligatorio (PDF, JPG o PNG, máximo 5 MB)
+        <input name="receipt" type="file" accept=".pdf,.jpg,.jpeg,.png" required>
+      </label>
+      <label class="consent"><input name="privacyRead" type="checkbox" required><span>He leído el <a href="privacidad.html" target="_blank" rel="noopener noreferrer">aviso de privacidad</a> para tramitar mi solicitud de socio.</span></label>
+      <button type="submit">Enviar solicitud</button>
+      <button id="editRequest" type="button">Volver a editar</button>
+    </form>
+  </section>
+</main>
+<script src="transferencias.js?v=104" defer></script>
+<script src="justificantes.js?v=103" defer></script>
+<script src="socios.js?v=avisos-dni-110" defer></script>
+</html>
+
+
+
+

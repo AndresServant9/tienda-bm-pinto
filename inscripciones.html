@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Inscripción 2027/2028 · Balonmano Pinto</title>
+<link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#a60832"><link rel="apple-touch-icon" href="/icons/icon-192.png"><link rel="stylesheet" href="/club-shell.css?v=114"><script src="/club-auth.js?v=114" defer></script><script src="/club-shell.js?v=114" defer></script>
+<link rel="stylesheet" href="transferencias.css?v=104">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f3ef;color:#242424;font:16px/1.5 system-ui,sans-serif}main{max-width:780px;margin:auto;padding:18px}header{background:#242424;color:white;border-radius:16px;padding:24px;display:flex;gap:20px;align-items:center}header img{width:75px}h1,h2{margin:0 0 .4em}header p{margin:0;color:#f6e34e}fieldset,section{background:white;border:1px solid #dedbd5;border-radius:12px;padding:18px;margin:20px 0;min-width:0}legend{font-weight:750}label{display:block;margin:.6rem 0}input:not([type=radio]):not([type=checkbox]),select,textarea{display:block;width:100%;padding:10px;border:1px solid #aaa;border-radius:6px;font:inherit}button{border:0;border-radius:7px;padding:12px 16px;background:#b60934;color:white;font:inherit;font-weight:700;cursor:pointer}button.secondary{background:#242424}small{display:block;color:#555}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:0 16px}output{display:block;font-weight:750}ul{padding-left:1.3rem}[hidden]{display:none!important}
+.authorization{margin:.6rem 0}.authorization a{color:#a20830;font-weight:650;text-underline-offset:.2em}dialog{width:min(92vw,520px);max-height:85vh;border:0;border-radius:14px;padding:24px;color:inherit;box-shadow:0 12px 40px #0004}dialog::backdrop{background:#0008}.copy-concept{background:#eee;color:#242424;padding:.35rem .65rem;font-size:.85rem;margin:.25rem 0 .55rem}.review-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin:1rem 0} #createRegistrationAccount{margin:1rem 0}#createRegistrationAccount summary{padding:.75rem;background:#f5f3ef;border-radius:7px;cursor:pointer;font-weight:700}#registrationAccount h3{margin:0}@media print{#registrationAccount,#registration,[data-privacy],.review-actions{display:none!important}body,section{background:white}section{border:0}}</style>
+
+<style>
+header.club-header { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
+.club-nav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .5rem; flex-basis: 100%; width: 100%; padding-top: .9rem; border-top: 1px solid #ffffff40; }
+.club-nav a { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: .55rem .4rem; border: 1px solid #ffffff45; border-radius: .5rem; color: #fff; font-size: .95rem; font-weight: 650; line-height: 1.3; text-align: center; text-decoration: none; }
+.club-nav a:hover { background: #ffffff20; }
+.club-nav a[aria-current="page"] { background: #fff; color: #242424; border-color: #fff; }
+.club-nav a:focus-visible { outline: 3px solid #f6e34e; outline-offset: 3px; }
+@media (max-width: 520px) { .club-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media print { .club-nav { display: none; } }
+</style>
+<style>
+#total { display: block; margin: 1rem 0; padding: 1rem; border: 2px solid #c89a00; border-radius: .6rem; background: #fff3bd; color: #242424; font-size: clamp(1.2rem, 4vw, 1.5rem); font-weight: 800; }
+.form-message:empty { display: none; }
+.form-message:not(:empty) { padding: .85rem 1rem; border-radius: .5rem; line-height: 1.5; }
+.form-message[data-kind="error"] { border: 2px solid #a60832; background: #fff0f3; color: #8a0629; font-weight: 700; }
+.form-message[data-kind="success"] { border: 1px solid #28733d; background: #edf8ef; color: #205c32; }
+.form-message[data-kind="info"] { border: 1px solid #d2d2d2; background: #f4f4f4; color: #242424; }
+#registrationAccount input[aria-invalid="true"] { border: 2px solid #a60832; background: #fff7f9; }
+#registration input[aria-invalid="true"] { border: 2px solid #a60832; background: #fff7f9; }
+.review-actions a.action-link { display: inline-flex; align-items: center; justify-content: center; padding: 12px 16px; border-radius: 7px; background: #b60934; color: white; font-weight: 700; text-decoration: none; }
+.review-actions a.action-link:hover { background: #91072a; }
+.review-actions a.action-link:focus-visible { outline: 3px solid #c89a00; outline-offset: 3px; }
+.copy-concept { min-height: 44px; }
+@media print { .copy-concept { display: none !important; } }
+@media print { .form-message { display: none; } }
+</style>
+<main>
+<header class="club-header"><img src="escudo.png" alt="Escudo del club"><div><p>Club Balonmano Pinto</p><h1>Inscripción 2027/2028</h1></div>
+<nav class="club-nav" aria-label="Navegación del club">
+  <a href="/">Tienda</a>
+  <a href="/" aria-current="page">Inscripciones</a>
+  <a href="/panel">Acceso club</a>
+  <a href="/socios">Socios</a>
+</nav>
+</header>
+<nav class="authorization" aria-label="Inscripciones del club"><a href="mis-inscripciones.html">Mis inscripciones</a></nav>
+<p>Completa los datos del jugador, revisa los pagos y confirma la inscripción con tu cuenta del club.</p>
+<button type="button" data-privacy>Leer el aviso de privacidad</button>
+<form id="registration">
+<div id="players"></div>
+<button type="button" class="secondary" id="add">Añadir otro jugador</button>
+<fieldset id="contactFields" hidden><legend id="contactLegend">Padre/Madre/Tutor</legend>
+<p id="contactHelp">Si inscribes a un menor, introduce los datos de su Padre/Madre/Tutor.</p><div class="grid">
+<label id="contactNameField">Nombre completo<input name="contact" autocomplete="name" required></label>
+<label id="contactIdentifierField">DNI/NIE del Padre/Madre/Tutor<input name="contactIdentifier" maxlength="12" required></label>
+<label>Correo electrónico<input type="email" name="email" required></label>
+<label>Teléfono<input type="tel" name="phone" required></label></div>
+<p class="authorization"><a href="https://chat.whatsapp.com/HCeexWXYCFO7ayt5HTg3wP?s=sw&amp;p=a&amp;iam=2" target="_blank" rel="noopener noreferrer">Entrar al canal de información general del club en WhatsApp</a></p>
+<label id="guardianMemberField" hidden><input name="member" type="checkbox" disabled> El Padre/Madre/Tutor ya es socio del club (descuento para los menores inscritos)</label>
+</fieldset>
+<fieldset><legend>Forma de pago</legend>
+<label><input type="radio" name="payment" value="single" checked> Pago único</label>
+<small>El pago único vence el 1 de julio de 2027. A partir de esa fecha, vence el día en que envíes la inscripción.</small>
+<label id="splitPaymentOption"><input type="radio" name="payment" value="split"> Pago fraccionado</label>
+<small id="proratedPaymentNote" hidden>Desde diciembre se paga al inscribirse. El importe se ajusta al mes de incorporación.</small>
+</fieldset>
+<label><input type="checkbox" name="privacyRead" required> He leído el <a href="privacidad.html" target="_blank" rel="noopener noreferrer">aviso de privacidad</a> y confirmo que inscribo al propio jugador o actúo como Padre/Madre/Tutor con facultad para autorizar su participación.</label>
+<button type="submit">Revisar inscripción</button>
+</form>
+<section id="summary" hidden tabindex="-1"><h2>Resumen de la inscripción</h2><output id="total"></output><ul id="breakdown"></ul><p id="schedule"></p><p id="membership"></p><div id="transferDetails" hidden></div><p id="reviewStatus" class="form-message" role="status" tabindex="-1"></p>
+<fieldset id="registrationAccount">
+<legend>Cuenta del club (obligatoria)</legend>
+<div><h3>Ya tengo cuenta</h3><p>Introduce el correo y la contraseña de tu cuenta del club.</p>
+<label>Correo de la cuenta <input type="email" id="registrationEmail" autocomplete="username" aria-describedby="reviewStatus"></label>
+<label>Contraseña de la cuenta <input type="password" id="registrationPassword" autocomplete="current-password" aria-describedby="reviewStatus"></label>
+<p><a href="recuperar-cuenta.html" target="_blank" rel="noopener noreferrer">He olvidado mi contraseña</a></p>
+
+</div>
+<details id="createRegistrationAccount">
+<summary>No tengo cuenta · Crear cuenta del club</summary>
+<form id="registrationSignup"><p>Hemos completado tus datos de contacto. Revísalos, elige una contraseña y verifica tu correo para crear la cuenta.</p>
+<label>Nombre completo<input name="fullName" autocomplete="name" required></label>
+<label>Teléfono<input name="phone" type="tel" autocomplete="tel" required></label>
+<label>DNI o NIE del titular de la cuenta<input name="identifier" aria-describedby="accountIdentifierHelp" required></label>
+<small id="accountIdentifierHelp">Introduce el documento completo, incluida la letra. Comprobamos el formato y la letra de control; esto no verifica la identidad del titular.</small>
+<label>Correo<input name="email" type="email" autocomplete="email" required></label>
+<label>Contraseña<input name="password" type="password" autocomplete="new-password" minlength="8" required></label>
+<label>Repetir contraseña<input name="repeat" type="password" autocomplete="new-password" minlength="8" required></label>
+<button>Enviar código de verificación</button>
+</form>
+<form id="registrationVerify" hidden>
+<label>Código del correo<input name="code" inputmode="numeric" autocomplete="one-time-code" required></label>
+<button>Verificar correo</button>
+<button type="button" class="secondary" id="resendRegistrationCode">Reenviar código</button>
+<button type="button" class="secondary" id="changeRegistrationEmail">Cambiar correo</button>
+</form>
+<p id="registrationSignupStatus" class="form-message" role="status" tabindex="-1"></p>
+</details>
+<label id="firstReceiptField" hidden><span id="firstReceiptLabel"></span>
+<input type="file" id="firstReceipt" accept=".pdf,.jpg,.jpeg,.png"></label>
+
+</fieldset>
+<div class="review-actions">
+<button type="button" class="secondary" id="editRegistration">Volver a editar</button>
+<button type="button" id="confirmRegistration">Confirmar inscripción</button>
+<a id="openMyRegistrations" class="action-link" href="mis-inscripciones.html" hidden>Ver mis inscripciones</a>
+<button type="button" id="printRegistration" hidden>Imprimir o guardar como PDF</button>
+</div>
+<small>El club recibirá la ficha, las autorizaciones y los justificantes que adjuntes.</small>
+</section>
+</main>
+<template id="player">
+<fieldset class="player">
+<legend></legend>
+<div class="grid">
+<label>Nombre completo del jugador<input name="playerName" required></label>
+<label>Fecha de nacimiento<input name="birth" type="date" required></label>
+<label>Rama del equipo<select name="division" required><option value="">Selecciona</option><option value="female">Femenino</option><option value="male">Masculino</option></select></label>
+<label class="senior" hidden>Equipo sénior masculino<select name="team" disabled><option value="">Pendiente de confirmar por el club</option><option value="national">Primera Nacional</option><option value="territorial">Territorial</option></select></label>
+</div>
+<output class="category" aria-live="polite"></output>
+<label>Documento del jugador (DNI/NIE)<input name="playerId" maxlength="12" required></label>
+<label class="no-player-id" hidden><input type="checkbox" name="noPlayerId" disabled> El menor no tiene DNI/NIE</label>
+<label class="own-membership" hidden><input type="checkbox" name="ownMember" disabled> Este jugador ya es socio del club</label>
+<p class="player-id-warning" role="status" hidden>Desde los 14 años, la Federación exige al jugador un documento propio para tramitar la ficha. Puedes continuar con la inscripción.</p>
+
+<div class="protocol authorization" hidden><a href="#authorizationDetails" aria-haspopup="dialog"></a></div>
+<div class="grid">
+<label>Domicilio del jugador<input name="address" autocomplete="street-address" maxlength="200" required></label>
+<label>Localidad<select name="town" required><option value="">Selecciona</option><option>Pinto</option><option>Valdemoro</option><option>Seseña</option><option>Leganés</option><option>Aranjuez</option><option value="other">Otra</option></select></label>
+<label class="other-town" hidden>Indica la localidad<input name="otherTown" maxlength="100" disabled></label>
+<label>¿Está empadronado en Pinto?<select name="registeredInPinto" required><option value="">Selecciona</option><option>Sí</option><option>No</option></select></label>
+</div>
+<p class="authorization">La ropa de calentamiento se incluye en el pack inicial. Si ya recibiste ese pack, puedes comprar ropa de calentamiento aparte en la tienda. <a href="/" target="_blank" rel="noopener noreferrer">Abrir la tienda del club</a></p>
+<label>¿Ya tiene el pack inicial?<select name="hasKit" required><option value="">Selecciona</option><option value="yes">Sí, ya tiene el pack inicial</option><option value="no">No, necesita el pack de 80 €</option></select></label>
+<div class="kit-fields" hidden><div class="grid">
+<label>Equipación de pista<select name="kitRole" required><option value="">Selecciona</option><option value="court">Jugador/a de pista</option><option value="goalkeeper">Portero/a</option></select></label>
+<label>Nombre para estampar<input name="printName" maxlength="30" required></label>
+<label>Talla de camiseta<select name="shirt" required></select></label>
+<label><span class="trouser-label">Talla de pantalón</span><select name="shorts" required></select></label>
+</div>
+<label><input name="fitted" type="checkbox"> El club ya tomó las tallas presencialmente</label></div>
+<label>¿Quieres comunicar información de salud necesaria para la actividad?
+<select name="hasHealth" required><option value="">Selecciona</option><option value="yes">Sí</option><option value="no">No</option></select></label>
+<div class="health-detail" hidden><label>Información que debe conocer el club<textarea name="health" maxlength="500" rows="2" disabled></textarea></label>
+<label><input type="checkbox" name="healthConsent" disabled> Consiento expresamente que el club trate esta información de salud para adaptar la actividad y gestionar una incidencia. Puedo retirar este consentimiento escribiendo al club.</label>
+<small>Comunica solo lo necesario. Si prefieres no indicarlo aquí, elige No y contacta con el club para valorar las necesidades de la actividad. <a href="privacidad.html#salud" target="_blank" rel="noopener noreferrer">Cómo se tratan los datos de salud</a>.</small></div>
+
+<div class="grid">
+<div class="authorization"><a href="#authorizationDetails" data-authorization="outings" aria-haspopup="dialog">Actividades fuera del pabellón</a><select aria-label="Actividades fuera del pabellón" name="outings" required><option value="">Selecciona</option><option>Sí</option><option>No</option></select></div>
+<div class="authorization"><a href="#authorizationDetails" data-authorization="transport" aria-haspopup="dialog">Transporte con el equipo</a><select aria-label="Transporte con el equipo" name="transport" required><option value="">Selecciona</option><option>Sí</option><option>No</option></select></div>
+<div class="authorization"><a href="#authorizationDetails" data-authorization="images" aria-haspopup="dialog">Publicación de imágenes</a><select aria-label="Publicación de imágenes" name="images" required><option value="">Selecciona</option><option>Sí</option><option>No</option></select></div>
+</div>
+<button type="button" class="secondary remove">Quitar jugador</button>
+</fieldset>
+</template>
+<dialog id="authorizationDetails" aria-labelledby="authorizationTitle">
+<h2 id="authorizationTitle"></h2>
+<div id="authorizationText"></div>
+<template id="federatedProtocol">
+<p><small>Protocolo de referencia para federados de Alevín a Sénior, temporada 2027/2028. Consulta siempre los centros concertados vigentes con la aseguradora.</small></p>
+<p><strong>Urgencia vital.</strong> Llama al <a href="tel:112">112</a> o acude al centro más cercano. Avisa al entrenador cuando sea posible.</p>
+<p><strong>Urgencia deportiva.</strong> Avisa al entrenador y llama a Nueva Mutua Sanitaria al <a href="tel:900909766">900 90 97 66</a> (24 h) para que te indique el centro concertado y gestione la autorización si hace falta. El protocolo prevé la atención urgente dentro de las primeras 48 horas. El club recomienda consultar por Montepríncipe, especialmente los fines de semana. Confirma el centro con la aseguradora.</p>
+<p><strong>Si no es urgente.</strong> Pide el parte al club y solicita autorización para una cita en un centro concertado. Llama al <a href="tel:+34912908075">91 290 80 75</a> (lunes a viernes, de 8:00 a 20:00) o escribe a <a href="mailto:accidentesdeportivos@nuevamutuasanitaria.es">accidentesdeportivos@nuevamutuasanitaria.es</a>.</p>
+<p><strong>Comunica el accidente en un máximo de 72 horas</strong>, hayas ido a urgencias o no. Envía a la aseguradora el parte cumplimentado y, si los tienes, el informe de urgencias y los volantes o prescripciones. Si te piden identificar al jugador en el centro, ten a mano su DNI.</p>
+<p><strong>Seguimiento y vuelta al deporte.</strong> Pide autorización previa para pruebas, revisiones, traumatología o rehabilitación. Tras cada visita, envía el informe y la prescripción que te hayan entregado. Una vez tramitado el parte, espera al alta médica deportiva para volver a entrenar o competir y envíala a la aseguradora.</p>
+<p><a href="https://fmbalonmano.federatio.com/upload/descargas/POLIZA%20ACCIDENTE%20DEPORTIVO%20protocolo%20accidente.pdf" target="_blank" rel="noopener noreferrer">Leer el protocolo oficial de accidentes (PDF)</a><br>
+<a href="https://www.fmbalonmano.com/administracion-seguro-deportivo" target="_blank" rel="noopener noreferrer">Póliza, parte de lesiones y centros concertados de la Federación</a></p>
+</template>
+<button type="button" data-privacy>Leer el aviso de privacidad</button>
+<form method="dialog"><button autofocus>Cerrar</button></form>
+</dialog>
+<dialog id="privacyDetails" aria-labelledby="privacyTitle">
+<h2 id="privacyTitle">Aviso de privacidad</h2>
+<p><strong>Responsable</strong> · Club Balonmano Pinto, NIF G80491095, Calle Asturias, s/n, 28320 Pinto. <a href="mailto:balonmanopinto1@gmail.com">balonmanopinto1@gmail.com</a>.</p>
+<p>Este formulario recoge los datos de contacto, identificación, equipación, salud y autorizaciones necesarios para tramitar la inscripción. La cuenta del club utiliza la verificación de correo electrónico.</p>
+<p>El club utilizará los datos necesarios para gestionar el alta y la actividad deportiva. La publicación de imágenes dependerá de tu elección. Puedes retirar ese permiso escribiendo al correo del club. Elegir «No» permite continuar con la inscripción.</p>
+<p>La gestión de la inscripción se basa en la relación con el club y en las obligaciones legales aplicables. La comunicación de datos de salud y la publicación de imágenes requieren tu consentimiento específico. Los datos se comunican a la federación, aseguradora o proveedor de ropa únicamente cuando la gestión lo requiere.</p>
+<p>Consulta las finalidades, bases jurídicas, conservación, proveedores y derechos en el <a href="privacidad.html" target="_blank" rel="noopener noreferrer">aviso de privacidad completo</a>.</p>
+<p>Puedes dirigirte al club para ejercer tus derechos de protección de datos y presentar una reclamación ante la <a href="https://www.aepd.es/" target="_blank" rel="noopener noreferrer">Agencia Española de Protección de Datos</a>.</p>
+<p><a href="https://eur-lex.europa.eu/eli/reg/2016/679/oj?locale=es" target="_blank" rel="noopener noreferrer">Reglamento General de Protección de Datos</a> · <a href="https://boe.es/eli/es/lo/2018/12/05/3/con" target="_blank" rel="noopener noreferrer">Ley Orgánica 3/2018</a></p>
+<form method="dialog"><button autofocus>Cerrar</button></form>
+</dialog>
+<script src="transferencias.js?v=104" defer></script>
+<script src="justificantes.js?v=103" defer></script>
+<script src="inscripcion.js?v=socios-por-jugador-105" defer></script>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
