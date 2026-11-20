@@ -8,8 +8,20 @@
   let memory = null, refreshing = null;
   const listeners = new Set();
   function read() {
-    try { const raw = localStorage.getItem(storageKey); return raw ? JSON.parse(raw) : null; }
-    catch { return memory; }
+    let raw;
+    try { raw=localStorage.getItem(storageKey); } catch { return memory; }
+    if (!raw) return null;
+    try {
+      const session=JSON.parse(raw);
+      if (typeof session?.access_token!=='string' || typeof session?.refresh_token!=='string' ||
+          typeof session?.user?.id!=='string' || typeof session?.user?.email!=='string' ||
+          !Number.isFinite(Number(session.expires_at))) throw Error('Sesión incompleta');
+      return session;
+    } catch {
+      memory=null;
+      try { localStorage.removeItem(storageKey); } catch {}
+      return null;
+    }
   }
   function epoch() { try { return localStorage.getItem(epochKey) || ''; } catch { return ''; } }
   function notify() { for (const listener of listeners) Promise.resolve().then(() => listener(read())).catch(() => {}); }
