@@ -23,6 +23,11 @@
     await document.getElementById('cloudHeader').onclick();
   }
   window.addEventListener('hashchange',()=>{updateOrdersLayout();openStoreManagement().catch(()=>{});});
+  document.addEventListener('click',event=>{
+    if(location.hash==='#gestion-pedidos'&&event.target.closest('a[href="/#gestion-pedidos"]')){
+      event.preventDefault();openStoreManagement().catch(()=>{});
+    }
+  });
   auth.subscribe(updateOrdersLayout);updateOrdersLayout();
   const membershipLinks=[...document.querySelectorAll('a[href*="forms.gle"]')].map(link=>({link,href:link.getAttribute('href'),target:link.getAttribute('target'),label:link.getAttribute('aria-label')}));
   window.addEventListener('club-access',event=>{
