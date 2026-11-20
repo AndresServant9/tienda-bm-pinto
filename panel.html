@@ -216,9 +216,9 @@ header.club-header { display: flex; flex-wrap: wrap; align-items: center; gap: 1
     <section id="remindersPane" role="tabpanel" aria-labelledby="tabReminders" hidden>
     <details id="reminders" class="surface" open>
       <summary>Vista previa de recordatorios de cuotas</summary>
-      <p>Consulta qué cuotas vencerían 7 días después de la fecha elegida.</p>
-      <p>Los recordatorios se envían 7 días antes del vencimiento, solo para cuotas pendientes. Cada familia recibe un correo con sus cuotas. Los pagos en revisión o confirmados y el pago a demanda quedan excluidos.</p>
-      <p>Esta vista previa no envía correos. El envío automático requiere instalar el SQL 93, desplegar la función de correo y activar la programación con el SQL 94.</p>
+      <p>Elige una fecha para consultar los recordatorios que corresponderían a ese día: cuotas pendientes con vencimiento 7 días después.</p>
+      <p>Cada familia recibe un único correo con sus cuotas pendientes. No se incluyen pagos en revisión, pagos confirmados ni acuerdos de pago a demanda.</p>
+      <p>Consultar esta vista previa no envía correos. Usa «Consultar estado de los avisos» para revisar los envíos automáticos.</p>
       <form id="reminderPreview" class="inline-fields">
         <label>Fecha de referencia <input name="previewDate" type="date" required></label>
         <button>Consultar avisos</button>
