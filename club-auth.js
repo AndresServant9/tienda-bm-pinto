@@ -109,7 +109,7 @@
     if (!fragment.has('access_token') && !query.has('token_hash') && !fragment.has('error') && !query.has('error')) return;
     history.replaceState(null, '', location.pathname + (location.pathname === '/' ? '#mis-pedidos' : ''));
     try {
-      if (fragment.has('error') || query.has('error')) throw Error('El enlace no es válido o ha caducado. Inicia sesión si ya verificaste el correo o solicita otro enlace.');
+      if (fragment.has('error') || query.has('error')) throw Error('El enlace ha caducado, ya se ha utilizado o no es válido. Si ya verificaste el correo, inicia sesión. Si no, solicita un código nuevo desde la pantalla donde creaste la cuenta.');
       if (type && !['signup','email','magiclink'].includes(type)) throw Error('Este enlace no corresponde a la verificación de una cuenta.');
       let data;
       if (query.get('token_hash')) data = await request('/auth/v1/verify', {type:'email', token_hash:query.get('token_hash')});
@@ -127,6 +127,20 @@
       emailLinkStatus = {ok:true,email:session.user.email,needsIdentifier};
     } catch (error) {
       emailLinkStatus = {ok:false,message:error.message};
+      // Un enlace de un solo uso puede fallar aunque otra apertura ya haya
+      // completado el acceso. No basta con fiarse de los datos del navegador:
+      // se consulta de nuevo al servidor antes de ofrecer continuar.
+      let existing;
+      try {
+        existing = await refresh();
+        if (existing) {
+          const session = await acceptSession(existing);
+          emailLinkStatus = {ok:false,sessionActive:true,email:session.user.email};
+        }
+      } catch (verificationError) {
+        if (existing && read()?.access_token === existing.access_token &&
+            ([401,403].includes(verificationError.status) || verificationError.message === 'Verifica el correo para acceder a tu cuenta.')) write(null);
+      }
     }
     window.dispatchEvent(new Event('hashchange'));
     window.dispatchEvent(new Event('club-email-verified'));

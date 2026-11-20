@@ -23,11 +23,15 @@
     verificationNotice.hidden = false;
     verificationNotice.replaceChildren();
     const title=document.createElement('strong'),text=document.createElement('p');
-    title.textContent=result.ok?'¡Bienvenido al Club Balonmano Pinto!':'No se ha podido completar la verificación';
-    text.textContent=result.ok?'Tu correo está verificado y ya has iniciado sesión con '+result.email+'. Crear la cuenta no envía una inscripción ni un alta de socio. Puedes continuar el trámite que necesites.':result.message;
+    title.textContent=result.ok?'¡Bienvenido al Club Balonmano Pinto!':result.sessionActive?'Tienes una sesión válida':'No se ha podido completar la verificación';
+    text.textContent=result.ok?'Tu correo está verificado y ya has iniciado sesión con '+result.email+'. Crear la cuenta no envía una inscripción ni un alta de socio. Puedes continuar el trámite que necesites.':result.sessionActive?'El enlace no se ha podido validar, pero hemos comprobado con el club que la sesión de '+result.email+' está activa y su correo está verificado. Puedes continuar con esta cuenta. Crear la cuenta no envía una inscripción ni un alta de socio.':result.message;
     verificationNotice.append(title,text);
     if(result.needsIdentifier){const hint=document.createElement('p');hint.textContent='No se pudo guardar el DNI/NIE. Contacta con el club si no aparece tu descuento de socio.';verificationNotice.append(hint);}
-    for(const [label,url] of [['Continuar inscripción','/inscripciones'],['Hacerme socio','/socios'],['Ver mis inscripciones','/mis-inscripciones']]){const link=document.createElement('a');link.href=url;link.textContent=label;verificationNotice.append(link);}
+    if(result.ok||result.sessionActive){
+      for(const [label,url] of [['Continuar inscripción','/inscripciones'],['Hacerme socio','/socios'],['Ver mis inscripciones','/mis-inscripciones']]){const link=document.createElement('a');link.href=url;link.textContent=label;verificationNotice.append(link);}
+    }else{
+      const login=document.createElement('button');login.type='button';login.textContent='Iniciar sesión';login.onclick=()=>window.ClubAccount.open();verificationNotice.append(login);
+    }
   }
   window.addEventListener('club-email-verified',showVerification);
   auth.getSession().then(showVerification).catch(()=>{});
