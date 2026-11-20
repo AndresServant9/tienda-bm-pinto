@@ -33,14 +33,17 @@ function ageOnDate(birth, today = new Date()) {
     (today.getMonth() + 1 === month && today.getDate() < day);
   return today.getFullYear() - year - Number(beforeBirthday);
 }
-function calculate(players, member, day = madridDate()) {
+function calculate(players, member, day = madridDate(), memberBudget = 20) {
   const eligible = players.filter(player => player.team !== 'national' && player.category?.name !== 'Sénior' &&
     player.birth && ageOnDate(player.birth, new Date(day + 'T12:00:00')) < 18);
   const siblings = players.length > 1;
+  let memberDiscounts = 0;
   const lines = players.map(player => {
     const exempt = player.team === 'national';
     const playerMember = player.member ?? member;
-    const discount = exempt ? 0 : (siblings ? 10 : 0) + (playerMember ? 10 : 0);
+    const memberDiscount = !exempt && playerMember && memberDiscounts * 10 + 10 <= Math.min(20,memberBudget) ? 10 : 0;
+    if (memberDiscount) memberDiscounts++;
+    const discount = exempt ? 0 : (siblings ? 10 : 0) + memberDiscount;
     const payments = exempt ? [0,0,0] : [...player.category.installments];
     if (player.hasKit) payments[0] = 0;
     payments[2] -= discount;
@@ -56,9 +59,9 @@ function calculate(players, member, day = madridDate()) {
       payments[0] += payments[1];
       payments[1] = 0;
     }
-    return {...player, member: playerMember, discount, payments, total: payments.reduce((sum, value) => sum + value, 0)};
+    return {...player, member: playerMember, memberDiscount, discount, payments, total: payments.reduce((sum, value) => sum + value, 0)};
   });
-  return {lines, laterDiscount: Math.min(20, eligible.filter(player => !(player.member ?? member)).length * 10)};
+  return {lines, laterDiscount: Math.min(Math.max(0,Math.min(20,memberBudget)-memberDiscounts*10), eligible.filter(player => !(player.member ?? member)).length * 10)};
 }
 function normalizeIdentifier(value) {
   return String(value || '').replace(/[\s.-]/g, '').toUpperCase();
@@ -83,6 +86,10 @@ if (typeof document !== 'undefined') {
   document.querySelector('#splitPaymentOption').hidden = proratedSeason;
   document.querySelector('#proratedPaymentNote').hidden = !proratedSeason;
   const reviewStatus = document.querySelector('#reviewStatus');
+  const memberStatus = document.createElement('p');memberStatus.className='form-message';memberStatus.tabIndex=-1;memberStatus.setAttribute('role','status');
+  form.querySelector('button[type=submit]').before(memberStatus);
+  const memberSummary=document.createElement('p');document.querySelector('#membership').after(memberSummary);
+  let reviewing=false,reviewRevision=0;
   function setStatus(element, text, kind = 'error') {
     element.dataset.kind = kind;
     element.setAttribute('role', kind === 'error' ? 'alert' : 'status');
@@ -366,6 +373,8 @@ if (typeof document !== 'undefined') {
         }
         const failure = await response.json().catch(() => ({}));
         if (failure.code === 'PGRST202') throw Error('El envío de inscripciones no está disponible. Contacta con el club.');
+        if(failure.code==='PT409'&&failure.message?.startsWith('La condición de socio'))throw Error(failure.message);
+        if(failure.message==='Revisa los importes de la inscripción')throw Error('El importe o el descuento disponible ha cambiado. Vuelve a editar y pulsa Revisar inscripción con tu sesión iniciada.');
         if (failure.message === 'Ficha de prueba incorrecta') throw Error('Revisa los datos de contacto, el domicilio y las autorizaciones.');
         if (failure.code === '22P02' || failure.message === 'Jugador de prueba incorrecto') {
           throw Error('No se pudieron validar los datos del pack. Revisa las tallas o contacta con el club.');
@@ -555,9 +564,11 @@ if (typeof document !== 'undefined') {
   }
   addPlayer();
   document.querySelector('#add').onclick = () => {summary.hidden = true; addPlayer().focus();};
-  form.addEventListener('input', () => {summary.hidden = true;});
-  form.onsubmit = event => {
+  form.addEventListener('input', () => {summary.hidden = true;reviewRevision++;});
+  form.addEventListener('change', () => {summary.hidden = true;reviewRevision++;});
+  form.onsubmit = async event => {
     event.preventDefault();
+    if(reviewing)return;
     updateContact();
     const documents = [...container.querySelectorAll('[name="playerId"]'), form.elements.contactIdentifier];
     const invalidDocument = documents.map(input => ({input, valid: validateDocument(input)})).find(result => !result.valid);
@@ -566,12 +577,47 @@ if (typeof document !== 'undefined') {
       invalidDocument.input.reportValidity();
       return;
     }
+    const reviewButton=form.querySelector('button[type=submit]'),revision=reviewRevision;
+    reviewing=true;reviewButton.disabled=true;
+    try{
+    const lookupResults=new Map();
+    async function isMember(identifier){
+      const normalized=normalizeIdentifier(identifier);
+      if(!normalized)return false;
+      if(!lookupResults.has(normalized)){
+        setStatus(memberStatus,'Comprobando los DNI de socio…','info');
+        const response=await accountRequest('/rest/v1/rpc/bm_pinto_check_public_member',{identifier:normalized});
+        if(!response.ok||typeof response.data!=='boolean')throw Error('No se pudo comprobar la condición de socio. Vuelve a revisar la inscripción en unos instantes.');
+        lookupResults.set(normalized,response.data);
+      }
+      return lookupResults.get(normalized);
+    }
+    const checkedPlayers=new Map(),membershipMessages=[];
+    let memberBudget=20;
+    const activeSession=await window.ClubAuth.getSession();
+    if(activeSession){
+      const response=await accountRequest('/rest/v1/rpc/bm_pinto_registration_member_budget',{},activeSession.access_token);
+      if(!response.ok||!Number.isInteger(response.data)||response.data<0||response.data>20)throw Error('No se pudo comprobar el descuento disponible de tu cuenta. Vuelve a revisar la inscripción.');
+      memberBudget=response.data;
+    }
+    const guardianClaim=form.elements.member.checked&&!form.elements.member.disabled;
+    const guardianMatches=guardianClaim?await isMember(form.elements.contactIdentifier.value):false;
+    if(guardianClaim)membershipMessages.push(guardianMatches?'Padre/Madre/Tutor: socio comprobado para los menores inscritos.':'El DNI del Padre/Madre/Tutor no consta como socio de esta temporada: no se aplica su descuento.');
+    for(const player of container.children){
+      const minor=ageOnDate(field(player,'birth').value)<18;
+      const ownClaim=field(player,'ownMember').checked;
+      const identifier=field(player,'playerId').disabled?(minor?form.elements.contactIdentifier.value:''):field(player,'playerId').value;
+      const ownMatches=ownClaim?await isMember(identifier):false;
+      checkedPlayers.set(player,ownMatches||(minor&&guardianMatches));
+      if(ownClaim)membershipMessages.push(field(player,'playerName').value.trim()+': '+(ownMatches?'socio comprobado.':'su DNI no consta como socio de esta temporada.'));
+    }
+    if(revision!==reviewRevision)throw Error('Has cambiado datos durante la comprobación. Pulsa de nuevo Revisar inscripción.');
+    setStatus(memberStatus,'','info');
     prefillAccount();
     const players = [...container.children].map(player => ({
       name: field(player, 'playerName').value.trim(),
       birth: field(player, 'birth').value,
-      member: field(player, 'ownMember').checked ||
-        (ageOnDate(field(player, 'birth').value) < 18 && form.elements.member.checked),
+      member: checkedPlayers.get(player),
       category: categoryFor(field(player, 'birth').value),
       division: field(player, 'division').value,
       team: field(player, 'team').disabled ? 'standard' : field(player, 'team').value,
@@ -599,7 +645,8 @@ if (typeof document !== 'undefined') {
       window.alert('La temporada 2026/2027 ya ha finalizado.');
       return;
     }
-    const calculated = calculate(players, form.elements.member.checked, day);
+    const calculated = calculate(players, false, day, memberBudget);
+    memberSummary.textContent=membershipMessages.join(' ')+(membershipMessages.length?' El descuento de socio es de 10 € por jugador elegible, con un máximo de 20 € por cuenta familiar y temporada. '+(activeSession?'Disponible antes de este envío: '+euro.format(memberBudget)+'.':'Si ya tienes cuenta, inicia sesión antes de revisar para consultar lo que queda disponible.'):'');
     const payment = day >= '2026-12-01' ? 'single' : form.elements.payment.value;
     const singleDeadline = singlePaymentDeadline(now);
     const deadlines = [day >= season.singlePaymentCutoff ? 'el día de la inscripción' : season.dates[0], ...season.dates.slice(1)];
@@ -719,6 +766,8 @@ if (typeof document !== 'undefined') {
     printRegistration.hidden = true;
     summary.hidden = false;
     summary.focus();
+    }catch(error){summary.hidden=true;setStatus(memberStatus,error.message);}
+    finally{reviewing=false;reviewButton.disabled=false;}
   };
 }
 
