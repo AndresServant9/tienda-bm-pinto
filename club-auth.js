@@ -85,6 +85,7 @@
     try { return await authorized('/rest/v1/rpc/bm_pinto_is_admin', {}) === true; } catch { return false; }
   }
   window.addEventListener('focus', () => { getSession().catch(() => {}); });
+  window.addEventListener('pageshow', () => { getSession().then(notify).catch(notify); });
   setInterval(() => { if (document.visibilityState === 'visible') getSession().catch(() => {}); }, 45000);
   window.addEventListener('storage', event => { if ([storageKey,epochKey].includes(event.key) || event.key === null) notify(); });
   window.ClubAuth = {getSession, signIn, signOut, acceptSession, authorized, isAdmin,

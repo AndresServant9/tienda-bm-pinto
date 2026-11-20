@@ -161,6 +161,7 @@ if (typeof document !== 'undefined') {
   function applyClubSession(session) {
     clubSession = session ? {email:session.user.email.toLowerCase(), token:session.access_token} : null;
     if (clubSession) accountEmail.value = clubSession.email;
+    accountEmail.readOnly = Boolean(clubSession);
     accountPassword.closest('label').hidden = Boolean(clubSession);
     document.querySelector('#createRegistrationAccount').hidden = Boolean(clubSession);
     const title = accountFields.querySelector('h3');
