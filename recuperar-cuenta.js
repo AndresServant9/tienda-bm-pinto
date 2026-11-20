@@ -2,7 +2,7 @@
   'use strict';
   const base = 'https://dfwnzfznhnkcqrdcydnx.supabase.co';
   const key = 'sb_publishable_U3568BhgdgCt7ysDU5l1CA_1CenKkjU';
-  const callback = 'https://inscripcion-bm-pinto.pages.dev/recuperar-cuenta';
+  const callback = 'https://tienda-bm-pinto.pages.dev/recuperar-cuenta';
   const requestForm = document.getElementById('requestRecovery');
   const changeForm = document.getElementById('changePassword');
   const status = document.getElementById('recoveryStatus');
