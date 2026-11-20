@@ -5,7 +5,13 @@
   const restrictedStorefront = location.pathname === '/' || location.pathname === '/index.html';
   const host = document.querySelector('header')?.parentElement || document.querySelector('main') || document.body;
   const bar = document.createElement('div'); bar.className = 'club-account-bar';
-  bar.innerHTML = '<span class="club-account-name" hidden></span><a href="/#mis-pedidos" data-account-link hidden>Mis pedidos</a><a href="/mis-inscripciones" data-account-link hidden>Mis inscripciones</a><a href="/panel" data-admin-link hidden>Gestión del club</a><button type="button" class="club-primary" data-login>Iniciar sesión</button><button type="button" data-logout hidden>Cerrar sesión</button><button type="button" data-install hidden>Instalar app</button>';
+  bar.innerHTML = `<a href="/#mis-pedidos" data-public-orders>Mis pedidos</a><button type="button" class="club-primary" data-login>Iniciar sesión</button>
+    <details class="club-account-menu" hidden><summary aria-label="Abrir menú de mi cuenta"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg><span>Mi cuenta</span><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></summary>
+      <div class="club-account-panel"><p class="club-account-caption">CUENTA DEL CLUB</p><p class="club-account-name"></p>
+        <a href="/#mis-pedidos" data-account-link>Mis pedidos</a><a href="/mis-inscripciones" data-account-link>Mis inscripciones</a>
+        <div class="club-admin-options" hidden><p class="club-account-caption">ADMINISTRACIÓN</p><a href="/panel" data-admin-link hidden>Gestión del club</a><a href="/#gestion-pedidos" data-admin-link hidden>Pedidos de la tienda</a></div>
+        <button type="button" data-logout>Cerrar sesión</button>
+      </div></details><button type="button" data-install hidden>Instalar app</button>`;
   host.prepend(bar);
   const dialog = document.createElement('dialog'); dialog.id = 'clubLoginDialog';
   dialog.setAttribute('aria-labelledby','clubLoginTitle');
@@ -19,23 +25,34 @@
     const name = bar.querySelector('.club-account-name'); name.hidden = !session;
     name.textContent = session?.user?.email || '';
     bar.querySelector('[data-login]').hidden = Boolean(session);
-    bar.querySelector('[data-logout]').hidden = !session;
+    bar.querySelector('.club-account-menu').hidden = !session;
+    bar.querySelector('[data-public-orders]').hidden = !restrictedStorefront || Boolean(session);
+    if(!session)bar.querySelector('.club-account-menu').open=false;
     bar.querySelectorAll('[data-account-link]').forEach(link => { link.hidden = !session || (restrictedStorefront && link.getAttribute('href') === '/mis-inscripciones'); });
     document.querySelectorAll('[data-admin-link]').forEach(link => { link.hidden = true; });
+    bar.querySelector('.club-admin-options').hidden=true;
     const admin = session && await auth.isAdmin();
     if (version !== revision) return;
     nav.hidden = restrictedStorefront && !admin;
     bar.querySelector('[href="/mis-inscripciones"]').hidden = !session || (restrictedStorefront && !admin);
     if(restrictedStorefront)bar.querySelector('[data-install]').hidden=true;
     document.querySelectorAll('[data-admin-link]').forEach(link => { link.hidden = !admin; });
+    bar.querySelector('.club-admin-options').hidden=!admin;
     window.dispatchEvent(new CustomEvent('club-access', {detail:{admin:Boolean(admin)}}));
   }
+  const pageHeader=document.querySelector('header.club-header');
+  if(pageHeader&&!pageHeader.querySelector('img')){const crest=document.createElement('img');crest.src='/escudo.png';crest.alt='Escudo del club';pageHeader.prepend(crest);}
   const links = [['Tienda','/'],['Inscripciones','/inscripciones'],['Socios','/socios']];
   let nav = document.querySelector('.club-nav');
   if (!nav) { nav = document.createElement('nav'); (document.querySelector('header') || bar).append(nav); }
   nav.hidden = restrictedStorefront;
   nav.className = 'club-navigation'; nav.setAttribute('aria-label','Navegación del club');
   nav.replaceChildren(...links.map(([label,href]) => { const a=document.createElement('a');a.textContent=label;a.href=href;if(location.pathname.replace(/\.html$/,'')===href)a.setAttribute('aria-current','page');return a; }));
+  const accountMenu=bar.querySelector('.club-account-menu');
+  document.addEventListener('click',event=>{if(!accountMenu.contains(event.target))accountMenu.open=false;});
+  accountMenu.addEventListener('keydown',event=>{if(event.key==='Escape'){accountMenu.open=false;accountMenu.querySelector('summary').focus();}});
+  accountMenu.querySelectorAll('a,button').forEach(control=>control.addEventListener('click',()=>{accountMenu.open=false;}));
+  dialog.addEventListener('close',()=>{form.elements.password.value='';});
   bar.querySelector('[data-login]').onclick = open;
   bar.querySelector('[data-logout]').onclick = async () => { await auth.signOut(); };
   dialog.querySelector('[data-close]').onclick = () => dialog.close();

@@ -4,7 +4,77 @@
 #clubLoginDialog{box-sizing:border-box;max-width:calc(100% - 2rem);width:28rem;border:1px solid #ddd;border-radius:1rem;padding:1.5rem;color:#242424;background:#fff;font:1rem/1.5 system-ui,sans-serif}#clubLoginDialog::backdrop{background:#0008}#clubLoginDialog label{display:block;margin:.8rem 0}#clubLoginDialog input{box-sizing:border-box;width:100%;min-height:46px;border:1px solid #888;border-radius:.4rem;padding:.6rem;font:inherit}#clubLoginDialog button{min-height:44px;padding:.6rem 1rem;border:0;border-radius:.5rem;background:#a60832;color:white;font:650 1rem system-ui;cursor:pointer}#clubLoginDialog .club-dialog-actions{display:flex;gap:.6rem;flex-wrap:wrap}#clubLoginStatus:empty{display:none}#clubLoginStatus:not(:empty){padding:.8rem;background:#fff0f3;border:2px solid #a60832;border-radius:.4rem}#clubLoginDialog h2{margin:0 0 .6rem}
 .club-navigation{display:flex;flex-wrap:wrap;gap:.5rem;margin:.8rem 0}.club-navigation a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:.5rem .85rem;border:1px solid #bbb;border-radius:.5rem;font:650 1rem system-ui;color:inherit;text-decoration:none}.club-navigation a[aria-current=page]{background:#a60832;border-color:#a60832;color:white}.club-navigation [hidden]{display:none!important}
 #historyLogout,#signout,#logout{display:none!important}
-@media(max-width:480px){.club-account-bar{justify-content:flex-start}.club-account-name{flex-basis:100%}.club-account-bar a,.club-account-bar button{flex:1 1 auto}.club-navigation{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%}.club-navigation a{padding:.5rem .2rem;font-size:.88rem}}
+@media(max-width:480px){.club-account-bar{justify-content:flex-start}.club-account-name{flex-basis:100%}.club-account-bar a,.club-account-bar button{flex:1 1 auto}.club-navigation{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr) minmax(0,.8fr);width:100%}.club-navigation a{padding:.5rem .2rem;font-size:.88rem}}
 @media print{.club-account-bar,.club-navigation,#clubLoginDialog{display:none!important}}
 
 .club-navigation[hidden]{display:none!important}
+
+/* Cabecera compacta y menú de cuenta común. */
+.club-account-bar{max-width:1120px;margin:0 auto;padding:.65rem 1rem;flex-wrap:nowrap;gap:.75rem;position:relative;z-index:30;justify-content:flex-end}
+.club-account-bar> a[data-public-orders]{border:0;background:transparent;padding:.4rem .5rem;font-size:.9rem}
+.club-account-menu{position:relative;margin:0;padding:0;border:0;background:transparent;font:1rem/1.4 system-ui,sans-serif}
+.club-account-menu>summary{list-style:none;display:flex;align-items:center;justify-content:center;gap:.55rem;cursor:pointer;min-height:44px;padding:.6rem .85rem;border:1px solid #d5cbc9;border-radius:.65rem;color:#8e062b;background:white;font-weight:700;white-space:nowrap}
+.club-account-menu>summary::-webkit-details-marker{display:none}
+.club-account-menu>summary::marker{content:''}
+.club-account-menu>summary:focus-visible{outline:3px solid #dbad00;outline-offset:3px}
+.club-account-panel{position:absolute;right:0;top:calc(100% + .5rem);width:min(310px,calc(100vw - 4rem));padding:.8rem;background:white;border:1px solid #ded6d3;border-radius:1rem;box-shadow:0 12px 36px #24242424;color:#242424;z-index:50;max-height:calc(100dvh - 100px);overflow:auto}
+.club-account-panel .club-account-name{font-size:.9rem;font-weight:650;margin:.2rem .5rem .8rem;overflow-wrap:anywhere}
+.club-account-panel .club-account-caption{margin:.3rem .5rem;color:#766a67;font-size:.68rem;font-weight:750;letter-spacing:.08em}
+.club-account-panel a,.club-account-panel button{display:flex;justify-content:flex-start;width:100%;border:0;background:transparent;color:#242424;text-align:left;padding:.7rem .65rem;border-radius:.5rem;font-size:.95rem}
+.club-account-panel a:hover,.club-account-panel button:hover{background:#f7f3f1}
+.club-admin-options{border-top:1px solid #eee5e2;margin-top:.6rem;padding-top:.6rem}
+.club-account-panel [data-logout]{border-top:1px solid #eee5e2;border-radius:0;margin-top:.6rem;padding-top:.85rem;color:#a60832}
+.club-account-menu[hidden],.club-admin-options[hidden]{display:none!important}
+header.club-header{padding:1rem;gap:.75rem;align-items:center}
+header.club-header>img{width:48px;height:auto;flex:0 0 48px}
+header.club-header>div{flex:1;min-width:0}
+header.club-header h1{font-size:clamp(1.3rem,5vw,1.9rem);line-height:1.2;margin:.15rem 0 0}
+header.club-header p{font-size:.9rem}
+header.club-header .club-navigation{flex-basis:100%;margin:.5rem 0 0;padding-top:.7rem;border-top:1px solid #ffffff25}
+header.club-header .club-navigation a{border-color:#ffffff45;min-height:42px}
+.club-store-header .brand img{width:50px;height:auto}
+#myOrdersButton,#realClubButton,#cloudHeader{display:none!important}
+.club-store-header .club-navigation{flex-basis:100%;margin:.25rem 0}
+.club-store-header{flex-wrap:wrap;gap:.75rem}
+.club-store-header .brand{flex:1;min-width:0}
+.club-store-header #cartButton{flex:0 0 auto;white-space:nowrap;min-height:44px;padding:.6rem .8rem;font-size:.9rem}
+
+/* Acceso e historial de pedidos: una sola columna con acciones diferenciadas. */
+#myOrders{box-sizing:border-box;width:calc(100% - 2rem);max-width:36rem;margin:1.5rem auto 2rem;padding:clamp(1.2rem,4vw,2rem);border:1px solid #e6e0dc;border-radius:1.25rem;background:white;box-shadow:0 3px 16px #24242405}
+#myOrders> a{display:inline-flex;align-items:center;min-height:40px;color:#8e062b;font-size:.9rem;font-weight:650;text-decoration:none}
+#myOrders h2{font-size:clamp(1.6rem,6vw,2rem);line-height:1.2;margin:.4rem 0 .65rem}
+#myOrders .club-orders-intro{margin:0 0 1.5rem;color:#625957;line-height:1.55;font-size:.95rem}
+#myOrders form{display:block;padding:0;margin:0;border:0;background:none;box-shadow:none}
+#myOrders label{display:grid;gap:.5rem;margin:0 0 1.1rem;font-size:.95rem;font-weight:650;line-height:1.4}
+#myOrders input{box-sizing:border-box;display:block;width:100%;min-width:0;min-height:48px;padding:.75rem .85rem;border:1px solid #cfc7c4;border-radius:.65rem;background:white;color:#242424;font:1rem system-ui,sans-serif}
+#myOrders input:focus{outline:2px solid #a60832;outline-offset:2px;border-color:#a60832}
+#myOrders .password-field{display:block;position:relative;margin:0 0 1.1rem}
+#myOrders .password-field label{margin:0}
+#myOrders .password-field input{padding-right:6rem}
+#myOrders .password-toggle{position:absolute;right:.4rem;bottom:.35rem;min-height:36px;min-width:0;width:auto;padding:.35rem .65rem;margin:0;border:0;border-radius:.4rem;color:#645452;background:#f2eeec;font-size:.85rem;line-height:1.3}
+#myOrders form>button[type=submit],#historyMore{box-sizing:border-box;display:flex;align-items:center;justify-content:center;width:100%;min-height:48px;margin:.3rem 0 .8rem;padding:.75rem 1rem;border:0;border-radius:.65rem;background:#a60832;color:white;font-size:1rem;font-weight:750;line-height:1.4}
+#historyRegisterToggle{box-sizing:border-box;width:100%;min-height:46px;margin:0 0 .2rem;padding:.7rem 1rem;border:1px solid #c8bcb8;border-radius:.65rem;background:white;color:#8e062b;font-size:.95rem;font-weight:650}
+#historyRecover,#historyRecoveryBack{box-sizing:border-box;display:block;min-height:44px;width:100%;margin:.2rem 0 0;padding:.6rem .3rem;border:0;background:transparent;color:#8e062b;font-size:.9rem;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+#historyRegistration{padding-top:.2rem}
+#myOrders [hidden]{display:none!important}
+#historyStatus:empty{display:none}
+#historyStatus:not(:empty){margin:1rem 0;padding:.8rem 1rem;background:#f7f3f1;border:1px solid #e3d8d3;border-radius:.65rem;font-size:.9rem;line-height:1.5}
+#historySearchLabel{padding-top:1rem;border-top:1px solid #eee5e2}
+#historyOrders .cartrow{display:block;border:1px solid #e4ddda;border-radius:.85rem;padding:1.1rem;margin:1rem 0;background:#fff}
+#historyOrders .cartrow strong{display:block;overflow-wrap:anywhere}
+#historyOrders .cartrow p,#historyOrders .cartrow li{line-height:1.6;font-size:.95rem}
+#historyOrders .cartrow button{min-height:44px;border:1px solid #e0d4ce;border-radius:.5rem;background:#f7f3f1;color:#8e062b;padding:.5rem .75rem;margin:.3rem .3rem 0 0;font-size:.9rem}
+.store-legal-links{display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem 1.25rem;max-width:48rem;margin:1.5rem auto;padding:1rem;border-top:1px solid #e4ddda}
+.store-legal-links button{background:transparent;border:0;color:#6b5f5b;min-height:44px;padding:.5rem 0;margin:0;font-size:.85rem;font-weight:500;text-decoration:underline;text-underline-offset:3px}
+.club-orders-page .notice{display:none}
+@media(max-width:480px){
+ .club-account-bar{padding:.5rem 1rem;justify-content:flex-end}
+ .club-account-bar>a,.club-account-bar>button{flex:none}
+ .club-account-panel a,.club-account-panel button{flex:none}
+ .club-store-header{padding:1rem;gap:.6rem}
+ .club-store-header .brand img{width:42px}
+ .club-store-header .brand{font-size:.9rem}
+ .club-store-header .brand small{font-size:.65rem}
+ #myOrders{margin-top:1rem}
+}
+@media print{.club-account-bar,.club-navigation{display:none!important}}

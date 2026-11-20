@@ -2,6 +2,28 @@
 (() => {
   'use strict';
   const auth = window.ClubAuth;
+  document.querySelector('header').classList.add('club-store-header');
+  const ordersIntro=document.createElement('p');ordersIntro.className='club-orders-intro';
+  document.querySelector('#myOrders h2').after(ordersIntro);
+  const loginSubmit=historyEmailForm.querySelector('button[type=submit]');
+  historyEmailForm.insertBefore(loginSubmit,document.getElementById('historyRegisterToggle'));
+  historyEmailForm.elements.email.closest('label').firstChild.textContent='Correo de la cuenta';
+  function updateOrdersLayout(){
+    document.body.classList.toggle('club-orders-page',location.hash==='#mis-pedidos');
+    const signedIn=Boolean(auth.current());
+    ordersIntro.textContent=signedIn?'Consulta el estado de tus compras y sus prendas.':'Entra con tu cuenta del club para consultar tus compras. También puedes crear una cuenta si todavía no tienes una.';
+    const search=document.getElementById('historySearchLabel');
+    if(!signedIn||!document.getElementById('historyOrders').children.length)search.hidden=true;
+  }
+  async function openStoreManagement(){
+    if(location.hash!=='#gestion-pedidos'||!await auth.isAdmin())return;
+    if(document.getElementById('cloudPanel').open)return;
+    const session=await auth.getSession();if(!session)return;
+    clubSession={accessToken:session.access_token,userId:session.user.id};
+    await document.getElementById('cloudHeader').onclick();
+  }
+  window.addEventListener('hashchange',()=>{updateOrdersLayout();openStoreManagement().catch(()=>{});});
+  auth.subscribe(updateOrdersLayout);updateOrdersLayout();
   const membershipLinks=[...document.querySelectorAll('a[href*="forms.gle"]')].map(link=>({link,href:link.getAttribute('href'),target:link.getAttribute('target'),label:link.getAttribute('aria-label')}));
   window.addEventListener('club-access',event=>{
     for(const entry of membershipLinks){
@@ -62,6 +84,7 @@
     document.getElementById('clubLoginForm').hidden=true;
     document.getElementById('realClubState').hidden=false;
     document.getElementById('realClubEmail').textContent=session.user.email;
+    await openStoreManagement();
   }
   document.getElementById('realClubButton').hidden=true;
   auth.subscribe(apply);auth.getSession().then(apply).catch(error=>{historyStatus.textContent=error.message;});
