@@ -45,6 +45,7 @@
   function open() { status.textContent = ''; dialog.showModal(); form.elements.email.focus(); }
   async function render() {
     const version = ++revision, session = auth.current();
+    nav.hidden = !session;
     showVerification();
     const name = bar.querySelector('.club-account-name'); name.hidden = !session;
     name.textContent = session?.user?.email || '';
@@ -57,7 +58,6 @@
     bar.querySelector('.club-admin-options').hidden=true;
     const admin = session && await auth.isAdmin();
     if (version !== revision) return;
-    nav.hidden = restrictedStorefront && !admin;
     bar.querySelector('[href="/mis-inscripciones"]').hidden = !session || (restrictedStorefront && !admin);
     if(restrictedStorefront)bar.querySelector('[data-install]').hidden=true;
     document.querySelectorAll('[data-admin-link]').forEach(link => { link.hidden = !admin; });
@@ -69,7 +69,7 @@
   const links = [['Tienda','/'],['Inscripciones','/inscripciones'],['Socios','/socios']];
   let nav = document.querySelector('.club-nav');
   if (!nav) { nav = document.createElement('nav'); (document.querySelector('header') || bar).append(nav); }
-  nav.hidden = restrictedStorefront;
+  nav.hidden = true;
   nav.className = 'club-navigation'; nav.setAttribute('aria-label','Navegación del club');
   nav.replaceChildren(...links.map(([label,href]) => { const a=document.createElement('a');a.textContent=label;a.href=href;if(location.pathname.replace(/\.html$/,'')===href)a.setAttribute('aria-current','page');return a; }));
   const accountMenu=bar.querySelector('.club-account-menu');
