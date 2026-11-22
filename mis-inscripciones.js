@@ -67,6 +67,7 @@ function enrollment(row, rejections) {
   const names = (account.player_names ?? []).filter(name => typeof name === 'string' && name.trim() && !name.includes('@'));
   card.append(node('h2', names.length ? names.join(' · ') : 'Inscripción · ' + row.categories.join(' · ')));
   if (names.length) card.append(node('p', row.categories.join(' · ')));
+  if (row.dorsals?.length) card.append(node('p', row.dorsals.map(d => (names[d.player_index] || 'Jugador ' + (d.player_index + 1)) + ' · Dorsal ' + d.number).join(' / ')));
   if (account.agreement_pending) {
     card.append(node('p', 'Acuerdo pendiente de concretar'));
     return card;
@@ -193,11 +194,13 @@ function receiptForm(id, payment) {
 
 async function loadEnrollments(session) {
   const rows = await post('/rest/v1/rpc/bm_pinto_my_registration_tests', {}, session);
-  const [rejections, discount] = await Promise.all([
+  const [rejections, discount, dorsals] = await Promise.all([
     post('/rest/v1/rpc/bm_pinto_my_registration_test_receipt_rejections', {}, session).catch(() => []),
     post('/rest/v1/rpc/bm_pinto_my_registration_test_membership_discount', {}, session).catch(() => null),
+    post('/rest/v1/rpc/bm_pinto_my_registration_dorsals', {}, session),
   ]);
   if (token === session) {
+    for (const row of rows) row.dorsals = dorsals.filter(d => d.registration_id === row.id);
     const membership = get('membershipDiscount');
     membership.hidden = !discount || Number(discount.discount) <= 0;
     membership.textContent = membership.hidden ? '' :

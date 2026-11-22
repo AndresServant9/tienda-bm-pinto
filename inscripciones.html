@@ -1,5 +1,6 @@
 <!doctype html>
-<html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="es"><meta charset="utf-8"><script src="dev-guard.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
 <title>Inscripción 2026/2027 · Balonmano Pinto</title>
 <link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#a60832"><link rel="apple-touch-icon" href="/icons/icon-192.png"><link rel="stylesheet" href="/club-shell.css?v=114"><script src="/club-auth.js?v=114" defer></script><script src="/club-shell.js?v=114" defer></script>
@@ -119,6 +120,11 @@ header.club-header { display: flex; flex-wrap: wrap; align-items: center; gap: 1
 <label class="senior" hidden>Equipo sénior masculino<select name="team" disabled><option value="">Pendiente de confirmar por el club</option><option value="national">Primera Nacional</option><option value="territorial">Territorial</option></select></label>
 </div>
 <output class="category" aria-live="polite"></output>
+<div class="dorsal-fields">
+<label>Dorsal de juego<select name="dorsal" required disabled aria-describedby="dorsalHelp"><option value="">Indica nacimiento y rama</option></select></label>
+<small id="dorsalHelp">Se comprueban tu categoría y la superior, esta temporada y la siguiente. Si ya tienes dorsal y no aparece, contacta con el club.</small>
+<p class="dorsal-status form-message" role="status" aria-live="polite"></p>
+</div>
 <label>Documento del jugador (DNI/NIE)<input name="playerId" maxlength="12" required></label>
 <label class="no-player-id" hidden><input type="checkbox" name="noPlayerId" disabled> El menor no tiene DNI/NIE</label>
 <label class="own-membership" hidden><input type="checkbox" name="ownMember" disabled> Este jugador ya es socio del club</label>
@@ -183,7 +189,8 @@ header.club-header { display: flex; flex-wrap: wrap; align-items: center; gap: 1
 </dialog>
 <script src="transferencias.js?v=104" defer></script>
 <script src="justificantes.js?v=103" defer></script>
-<script src="inscripcion.js?v=socio-tutor-o-adulto-131" defer></script>
+<script src="dorsales.js?v=140" defer></script>
+<script src="inscripcion.js?v=dorsales-140" defer></script>
 </html>
 
 

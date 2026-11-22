@@ -1,0 +1,16 @@
+{
+ "name": "bm-pinto-desarrollo-dorsales",
+ "version": "0.1.0",
+ "private": true,
+ "scripts": {
+  "dev": "node dev/server.cjs",
+  "test": "node dev/test-dorsals.cjs",
+  "test:form": "node dev/test-form.cjs"
+ },
+ "dependencies": {
+  "@electric-sql/pglite": "0.3.14"
+ },
+ "devDependencies": {
+  "jsdom": "26.1.0"
+ }
+}

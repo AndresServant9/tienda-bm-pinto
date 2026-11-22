@@ -371,7 +371,11 @@ if (typeof document !== 'undefined') {
         }
         const failure = await response.json().catch(() => ({}));
         if (failure.code === 'PGRST202') throw Error('El envío de inscripciones no está disponible. Contacta con el club.');
-        if(failure.code==='PT409')throw Error('No se ha encontrado socio en la temporada actual.');
+        if(failure.code==='PT409')throw Error(/socio/i.test(failure.message || '') ? 'No se ha encontrado socio en la temporada actual.' : failure.message || 'Los datos de la inscripción han cambiado. Vuelve a revisarlos.');
+        if(failure.code==='PT410') {
+          await Promise.all([...container.children].map(player => refreshDorsal(player, true)));
+          throw Error('El dorsal elegido ya no está disponible. Selecciona otro y vuelve a revisar la inscripción.');
+        }
         if(failure.message==='Revisa los importes de la inscripción')throw Error('El importe ha cambiado. Actualiza el formulario y pulsa Revisar inscripción.');
         if (failure.message === 'Ficha de prueba incorrecta') throw Error('Revisa los datos de contacto, el domicilio y las autorizaciones.');
         if (failure.code === '22P02' || failure.message === 'Jugador de prueba incorrecto') {
@@ -477,6 +481,47 @@ if (typeof document !== 'undefined') {
     });
     updateContact();
   }
+  async function refreshDorsal(player, force = false) {
+    const birth = field(player, 'birth').value, division = field(player, 'division').value;
+    const name = field(player, 'playerName').value.trim();
+    const select = field(player, 'dorsal'), status = player.querySelector('.dorsal-status');
+    const key = [birth, division, name, window.ClubAuth?.current()?.user?.id || 'guest'].join('|');
+    if (!force && player.dorsalKey === key) return player.dorsalPromise;
+    player.dorsalKey = key;
+    const previous = select.value, revision = (player.dorsalRevision || 0) + 1;
+    player.dorsalRevision = revision;
+    select.disabled = true;
+    select.replaceChildren(new Option('Indica nacimiento, rama y nombre', ''));
+    status.textContent = '';
+    if (!birth || !division || !name || !field(player, 'birth').checkValidity()) return;
+    select.replaceChildren(new Option('Consultando dorsales…', ''));
+    status.textContent = 'Comprobando los números disponibles…';
+    player.dorsalPromise = (async () => {
+      try {
+        const session = await window.ClubAuth.getSession();
+        const response = await fetch('https://dfwnzfznhnkcqrdcydnx.supabase.co/rest/v1/rpc/bm_pinto_dorsal_options', {
+          method: 'POST', headers: {apikey: publishableKey, 'Content-Type': 'application/json', ...(session?.access_token ? {Authorization: 'Bearer ' + session.access_token} : {})},
+          body: JSON.stringify({p_birth: birth, p_division: division, p_name: name}), signal: AbortSignal.timeout(15000),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !Array.isArray(data.available) || data.available.some(n => !Number.isInteger(n) || n < 1 || n > 99)) throw Error('No se pudieron comprobar los dorsales. Vuelve a intentarlo.');
+        if (revision !== player.dorsalRevision || !player.isConnected) return;
+        select.replaceChildren(new Option(data.available.length ? 'Selecciona un dorsal' : 'No hay dorsales disponibles', ''), ...data.available.map(n => new Option(String(n), String(n))));
+        select.disabled = false;
+        if (data.own_number && data.available.includes(data.own_number)) select.value = String(data.own_number);
+        else if (data.available.includes(Number(previous))) select.value = previous;
+        status.dataset.kind = 'info';
+        status.textContent = data.own_number ? 'Se conserva tu dorsal asignado: ' + data.own_number + '.' :
+          data.available.length ? 'Solo se muestran los dorsales disponibles. Se reservará al confirmar la inscripción.' : 'El club debe revisar las asignaciones. Contacta con nosotros.';
+      } catch (error) {
+        if (revision !== player.dorsalRevision) return;
+        select.replaceChildren(new Option('No se pudo consultar. Reintenta la comprobación.', ''));
+        status.dataset.kind = 'error'; status.textContent = error.message;
+        player.dorsalKey = '';
+      }
+    })();
+    return player.dorsalPromise;
+  }
   function updatePlayer(player) {
     const category = categoryFor(field(player, 'birth').value);
     const showOtherTown = field(player, 'town').value === 'other';
@@ -538,9 +583,13 @@ if (typeof document !== 'undefined') {
       field(player, name).disabled = !needsKit || field(player, 'fitted').checked;
     }
     updateContact();
+    refreshDorsal(player);
   }
   function addPlayer() {
     const player = document.querySelector('#player').content.firstElementChild.cloneNode(true);
+    const helpId = 'dorsal-help-' + crypto.randomUUID();
+    player.querySelector('#dorsalHelp').id = helpId;
+    field(player, 'dorsal').setAttribute('aria-describedby', helpId);
     bindDocument(field(player, 'playerId'));
     for (const [name, options] of [
       ['shirt', ['7/8 XS','5/6 XS','3/4 XS',...sizes,'4XL']],
@@ -550,7 +599,13 @@ if (typeof document !== 'undefined') {
     const dateParts = [today.getFullYear(), today.getMonth() + 1, today.getDate()];
     field(player, 'birth').max = dateParts.map(part => String(part).padStart(2, '0')).join('-');
     player.addEventListener('change', () => updatePlayer(player));
-    player.addEventListener('input', () => updateContact());
+    player.addEventListener('input', event => {
+      updateContact();
+      if (['playerName','birth','division'].includes(event.target.name)) {
+        clearTimeout(player.dorsalTimer);
+        player.dorsalTimer = setTimeout(() => refreshDorsal(player), 350);
+      }
+    });
     player.querySelector('.remove').onclick = () => {
       player.remove();
       renumber();
@@ -579,6 +634,13 @@ if (typeof document !== 'undefined') {
     const reviewButton=form.querySelector('button[type=submit]'),revision=reviewRevision;
     reviewing=true;reviewButton.disabled=true;
     try{
+    await Promise.all([...container.children].map(player => refreshDorsal(player, true)));
+    const dorsalPlayers = [...container.children].map(player => ({
+      number: Number(field(player, 'dorsal').value), division: field(player, 'division').value,
+      birthYear: Number(field(player, 'birth').value.slice(0,4)),
+    }));
+    if (dorsalPlayers.some(player => !Number.isInteger(player.number) || player.number < 1 || player.number > 99)) throw Error('Selecciona un dorsal disponible para cada jugador.');
+    window.ClubDorsals.checkFamily(dorsalPlayers, season.year);
     const lookupResults=new Map();
     async function isMember(identifier){
       const normalized=normalizeIdentifier(identifier);
@@ -609,6 +671,7 @@ if (typeof document !== 'undefined') {
     const players = [...container.children].map(player => ({
       name: field(player, 'playerName').value.trim(),
       birth: field(player, 'birth').value,
+      dorsal: Number(field(player, 'dorsal').value),
       member: checkedPlayers.get(player),
       category: categoryFor(field(player, 'birth').value),
       division: field(player, 'division').value,
@@ -646,7 +709,7 @@ if (typeof document !== 'undefined') {
     list.replaceChildren(...players.map((player, index) => {
       const item = document.createElement('li');
       const line = player.team ? calculated.lines[index] : null;
-      item.textContent = [player.name, player.category.name, player.kit, player.hasKit ? '' : 'Estampado ' + player.printName,
+      item.textContent = [player.name, player.category.name, 'Dorsal ' + player.dorsal, player.kit, player.hasKit ? '' : 'Estampado ' + player.printName,
         !line ? 'Equipo pendiente de confirmar' : line.team === 'national' ? 'Primera Nacional · Exento' :
           euro.format(line.total) + (line.discount ? ' con ' + euro.format(line.discount) + ' de descuento' : '')].filter(Boolean).join(' · ');
       const kitContents = document.createElement('small');
@@ -726,6 +789,7 @@ if (typeof document !== 'undefined') {
       })),
     };
     const details = {
+      dorsals: players.map(player => player.dorsal),
       privacy: {version: '2026-2027-v3', acknowledged: form.elements.privacyRead.checked},
       contact: {
         name: form.elements.contact.value.trim(),
