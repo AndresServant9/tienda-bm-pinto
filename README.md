@@ -71,8 +71,14 @@ verificado coincidente, nombre y fecha completa. El titular queda fijado solo al
 guardar toda la inscripcion, dentro de la misma transaccion. Un cambio posterior
 del correo de la misma cuenta no pierde el dorsal ya recuperado.
 
-Resultado inicial privado: 13 vinculos exactos; 131 asignaciones con sugerencias
-de nombres abreviados y 67 sin propuesta. No se aprueban sugerencias automaticamente.
+El club autoriza vincular nombre y primer apellido cuando la correspondencia es
+unica en ambas listas. Activar esa regla expresamente con
+`--club-unique-prefix` al importar el JSON producido por el comparador con
+`allowUniqueAbbreviations: true`. No se aceptan nombres solos ni apellidos parciales.
+Si hay nombres repetidos en otra cohorte, quedan pendientes igualmente.
+Resultado privado revisado: 136 vinculos (10 exactos y 126 abreviados aprobados),
+8 registros ambiguos y 67 sin propuesta. Tres vinculos exactos anteriores quedan
+apartados al detectar duplicados con la regla ampliada; no se borra ningun dorsal.
 
 ## Antes de integrar
 
