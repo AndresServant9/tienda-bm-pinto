@@ -5,6 +5,8 @@ const family='14000000-0000-4000-8000-000000000001';
  assert.equal(sourceState('BAJA: Persona ficticia','review'),'released');
  assert.equal(sourceState(' baja : Persona ficticia','review'),'released');
  assert.equal(sourceState('Duda: Persona ficticia','active'),'review');
+ assert.equal(sourceState('Duda: Persona ficticia','released'),'released');
+ assert.equal(sourceState('Duda: Otra persona ficticia','review'),'review');
  assert.equal(sourceState('Persona con baja en observaciones','active'),'active');
  assert.equal(sourceState('BAJAMAR DE EJEMPLO','active'),'active');
  const db=await createDatabase();try{

@@ -49,6 +49,8 @@ Puede auditarse un JSON privado con `node dev/import-private-audit.cjs RUTA_JSON
 Se guarda en otra base local `.dev-data/sheet-audit`; no se usa como demo publica.
 Por decision del club, las anotaciones con prefijo BAJA: dejan de reservar numero;
 se conservan sus registros con estado released. DUDA: sigue pendiente y reservando.
+Una duda solo se libera mediante decision expresa del club por registro; la decision
+privada se conserva al reimportar, aunque la hoja original siga mostrando DUDA.
 Las coincidencias historicas entre jugadores activos se conservan sin reasignar.
 Los nombres abreviados y las asignaciones sin titular requieren conciliacion del club.
 
