@@ -12,6 +12,7 @@ async function createDatabase(dataDir){
  if(fresh){
   await db.exec(fs.readFileSync(path.join(__dirname,'fixture-dorsals.sql'),'utf8'));
  }
+ await db.exec(fs.readFileSync(path.join(__dirname,'demo-views.sql'),'utf8'));
  return db;
 }
 module.exports={createDatabase};

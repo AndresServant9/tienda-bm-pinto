@@ -5,7 +5,8 @@
  "scripts": {
   "dev": "node dev/server.cjs",
   "test": "node dev/test-dorsals.cjs",
-  "test:form": "node dev/test-form.cjs"
+  "test:form": "node dev/test-form.cjs",
+  "test:http": "node dev/test-http.cjs"
  },
  "dependencies": {
   "@electric-sql/pglite": "0.3.14"

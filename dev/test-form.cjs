@@ -7,12 +7,19 @@ const pause=ms=>new Promise(r=>setTimeout(r,ms));
  const w=dom.window,requests=[];w.AbortSignal=AbortSignal;w.structuredClone=structuredClone;w.Request=Request;
  w.fetch=async(input,init)=>{const url=new URL(String(input),w.location.href);assert.equal(url.origin,'http://127.0.0.1:8140','ninguna llamada externa');requests.push(url.pathname);return fetch(url,init);};
  w.HTMLElement.prototype.scrollIntoView=function(){};w.alert=message=>{throw Error(message)};
+ w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};
+ w.HTMLDialogElement.prototype.close=function(){this.open=false;this.dispatchEvent(new w.Event('close'));};
  try{
-  for(const file of ['dev-guard.js','club-auth.js','dorsales.js','transferencias.js','justificantes.js','inscripcion.js'])w.eval(fs.readFileSync(path.join(root,file),'utf8'));
+  for(const file of ['dev-guard.js','club-auth.js','dorsales.js','dorsal-picker.js','transferencias.js','justificantes.js','inscripcion.js'])w.eval(fs.readFileSync(path.join(root,file),'utf8'));
   const player=w.document.querySelector('.player'),field=name=>player.querySelector('[name="'+name+'"]');
   const change=(name,value)=>{field(name).value=value;field(name).dispatchEvent(new w.Event('change',{bubbles:true}));};
   change('playerName','Nuevo de prueba');change('birth','2015-02-01');change('division','male');await pause(650);
   let numbers=[...field('dorsal').options].map(x=>x.value);assert.ok(!numbers.includes('7'));assert.ok(numbers.includes('21'));assert.equal(field('dorsal').disabled,false);
+  const picker=player.querySelector('.dorsal-picker-button'),dialog=player.querySelector('.dorsal-dialog');
+  picker.click();assert.equal(dialog.open,true);assert.equal(player.querySelector('[data-dorsal-choice="7"]'),null);
+  const search=dialog.querySelector('input');search.value='21';search.dispatchEvent(new w.Event('input',{bubbles:true}));
+  assert.equal(dialog.querySelectorAll('[data-dorsal-choice]').length,1);dialog.querySelector('[data-dorsal-choice="21"]').click();assert.equal(field('dorsal').value,'21');assert.equal(dialog.open,false);assert.match(picker.textContent,/Dorsal 21/);
+  picker.click();search.value='7';search.dispatchEvent(new w.Event('input'));assert.equal(dialog.querySelector('.dorsal-grid-empty').hidden,false);dialog.querySelector('.dorsal-dialog-heading button').click();assert.equal(dialog.open,false);
   change('birth','2016-02-01');await pause(300);assert.ok([...field('dorsal').options].some(x=>x.value==='7'));
   change('birth','2015-02-01');change('division','female');await pause(300);assert.ok([...field('dorsal').options].some(x=>x.value==='7'));
   await w.ClubAuth.signIn('familia@example.test','PruebaLocal123!');change('playerName','Lucas de ejemplo');change('division','male');await pause(300);
@@ -24,6 +31,6 @@ const pause=ms=>new Promise(r=>setTimeout(r,ms));
   // Una respuesta antigua no puede pisar la rama o nacimiento elegidos despues.
   let unblock;const previousFetch=w.fetch;w.fetch=async(input,init)=>{const p=JSON.parse(init?.body||'{}');if(p.p_birth==='2016-03-03'){await new Promise(resolve=>{unblock=resolve;});return new Response(JSON.stringify({available:[99],own_number:null}),{headers:{'Content-Type':'application/json'}});}return previousFetch(input,init);};
   change('birth','2016-03-03');await pause(50);change('birth','2015-02-01');await pause(250);unblock();await pause(50);assert.equal(field('dorsal').value,'12');
-  console.log('PASS DOM: selector dinamico, cambio de nacimiento/rama, dorsal propio, resumen, respuesta desactualizada y peticiones solo locales.');
+  console.log('PASS DOM: selector compacto, busqueda, numeros ocupados, cierre, cambio de nacimiento/rama, dorsal propio, resumen, respuesta desactualizada y peticiones solo locales.');
  }finally{dom.window.close();}
 })().catch(e=>{console.error(e.stack);process.exitCode=1;});

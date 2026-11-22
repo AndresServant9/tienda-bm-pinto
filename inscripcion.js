@@ -518,6 +518,8 @@ if (typeof document !== 'undefined') {
         select.replaceChildren(new Option('No se pudo consultar. Reintenta la comprobación.', ''));
         status.dataset.kind = 'error'; status.textContent = error.message;
         player.dorsalKey = '';
+      } finally {
+        if (revision === player.dorsalRevision) select.dorsalPicker?.sync();
       }
     })();
     return player.dorsalPromise;
@@ -590,6 +592,7 @@ if (typeof document !== 'undefined') {
     const helpId = 'dorsal-help-' + crypto.randomUUID();
     player.querySelector('#dorsalHelp').id = helpId;
     field(player, 'dorsal').setAttribute('aria-describedby', helpId);
+    window.ClubDorsalPicker.bind(player);
     bindDocument(field(player, 'playerId'));
     for (const [name, options] of [
       ['shirt', ['7/8 XS','5/6 XS','3/4 XS',...sizes,'4XL']],
@@ -607,6 +610,7 @@ if (typeof document !== 'undefined') {
       }
     });
     player.querySelector('.remove').onclick = () => {
+      field(player, 'dorsal').dorsalPicker.destroy();
       player.remove();
       renumber();
       summary.hidden = true;

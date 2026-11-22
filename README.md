@@ -8,6 +8,8 @@ Ejecutar `npm ci`, `npm test` y `npm run dev`. Abrir
 `http://127.0.0.1:8140/inscripciones` en el mismo ordenador.
 Cuenta ficticia: `familia@example.test`, clave de demostracion `PruebaLocal123!`.
 Con el servidor arrancado, `npm run test:form` comprueba el formulario en DOM.
+`npm run test:http` ensaya reserva, consulta familiar y dos envios simultaneos
+contra la base ficticia local. Estos ensayos dejan inscripciones ficticias en esa base.
 
 La base PostgreSQL local PGlite esta en `.dev-data/database`, excluida de Git.
 El servidor escucha solo en `127.0.0.1`. Usa personas ficticias y no envia correo.
@@ -30,6 +32,8 @@ Se consulta sin mostrar nombres ajenos. Se reserva en la misma transaccion que l
 inscripcion. Un bloqueo transaccional vuelve a validar disponibilidad al enviar.
 El mismo envio es idempotente; un reintento distinto o con numero ocupado se rechaza.
 El dorsal aparece en resumen, Mis inscripciones, panel y columna Numero del pack.
+El selector abre una ventana compacta con busqueda y cuadricula desplazable,
+en lugar del desplegable nativo de casi toda la pantalla.
 
 ## Hoja anterior
 
@@ -42,8 +46,8 @@ Los nombres abreviados y las asignaciones sin titular requieren conciliacion del
 ## Antes de integrar
 
 - Resolver conflictos y confirmar bajas; vincular dorsales existentes con jugadores.
-- Probar la interfaz en navegador real, Android e iOS. Esta iteracion tiene pruebas DOM,
-  pero el navegador remoto no estuvo disponible para revision visual.
+- El selector se ha probado en navegador de escritorio y vistas de 390 y 320 pixeles,
+  sin desbordamiento horizontal. Falta probar teclado tactil en Android/iOS reales.
 - Hacer prueba de concurrencia con dos conexiones PostgreSQL independientes.
 - Preparar el despliegue coordinado de SQL `sql/140-dorsales.sql` y formulario.
 - Retirar expresamente guardas de desarrollo y configuracion de demo en un cambio
