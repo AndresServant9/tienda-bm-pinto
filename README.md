@@ -47,7 +47,9 @@ en lugar del desplegable nativo de casi toda la pantalla.
 La copia y el informe de asignaciones reales quedan fuera del repositorio.
 Puede auditarse un JSON privado con `node dev/import-private-audit.cjs RUTA_JSON`.
 Se guarda en otra base local `.dev-data/sheet-audit`; no se usa como demo publica.
-No se liberan automaticamente las anotaciones BAJA/DUDA ni se reasignan conflictos.
+Por decision del club, las anotaciones con prefijo BAJA: dejan de reservar numero;
+se conservan sus registros con estado released. DUDA: sigue pendiente y reservando.
+Las coincidencias historicas entre jugadores activos se conservan sin reasignar.
 Los nombres abreviados y las asignaciones sin titular requieren conciliacion del club.
 
 ## Antes de integrar
