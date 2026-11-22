@@ -514,7 +514,7 @@ if (typeof document !== 'undefined') {
         else if (data.available.includes(Number(previous))) select.value = previous;
         status.dataset.kind = 'info';
         status.textContent = data.own_number && data.available.includes(data.own_number) ? 'Se conserva tu dorsal asignado: ' + data.own_number + '.' :
-          data.available.length ? 'Solo se muestran los dorsales disponibles. Se reservará al confirmar la inscripción.' : 'El club debe revisar las asignaciones. Contacta con nosotros.';
+          data.available.length ? (window.ClubDevelopment?.readOnly ? 'Disponibilidad de la copia de la hoja. Esta consulta no reserva el dorsal.' : 'Solo se muestran los dorsales disponibles. Se reservará al confirmar la inscripción.') : 'El club debe revisar las asignaciones. Contacta con nosotros.';
       } catch (error) {
         if (revision !== player.dorsalRevision) return;
         select.replaceChildren(new Option('No se pudo consultar. Reintenta la comprobación.', ''));

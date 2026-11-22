@@ -17,6 +17,16 @@ create table if not exists bm_pinto.dorsal_assignments (
 );
 -- Solo el club/importacion privada marca dorsales que ya existian antes de la app.
 alter table bm_pinto.dorsal_assignments add column if not exists preserve_existing boolean not null default false;
+create table if not exists bm_pinto.dorsal_player_links (
+ assignment_id uuid primary key references bm_pinto.dorsal_assignments(id) on delete cascade,
+ source_player_key text not null,
+ canonical_name text not null check(char_length(canonical_name) between 1 and 120),
+ birth date not null check(birth>=date '1900-01-01'),
+ email_hashes text[] not null check(array_to_string(email_hashes,',')~'^[0-9a-f]{64}(,[0-9a-f]{64})?$'),
+ source_row integer not null check(source_row>0)
+);
+alter table bm_pinto.dorsal_player_links enable row level security;
+revoke all on bm_pinto.dorsal_player_links from public,anon,authenticated;
 create table if not exists bm_pinto.registration_dorsals (
  registration_id uuid not null references bm_pinto.registration_tests(id) on delete cascade,
  player_index integer not null check(player_index between 0 and 11),
@@ -48,6 +58,26 @@ returns boolean language sql immutable set search_path='' as $$
  where bm_pinto.dorsal_category(a_max,y)<=bm_pinto.dorsal_category(b_min,y)+1
  and bm_pinto.dorsal_category(b_max,y)<=bm_pinto.dorsal_category(a_min,y)+1);
 $$;
+create or replace function bm_pinto.owned_dorsal(p_birth date,p_division text,p_name text)
+returns table(id uuid,number integer,preserved boolean) language sql stable set search_path='' as $$
+ select a.id,a.number,a.preserve_existing from bm_pinto.dorsal_assignments a
+ join auth.users u on u.id=auth.uid() and u.email_confirmed_at is not null
+ where a.state='active' and a.division=p_division
+ and a.season_year=(select start_year from bm_pinto.campaign_release_state where singleton)
+ and extract(year from p_birth)::integer between a.birth_min and a.birth_max
+ and (
+  (a.owner_id=u.id and (
+    (not exists(select 1 from bm_pinto.dorsal_player_links l where l.assignment_id=a.id)
+     and bm_pinto.dorsal_name(a.player_name)=bm_pinto.dorsal_name(p_name))
+    or exists(select 1 from bm_pinto.dorsal_player_links l where l.assignment_id=a.id and l.birth=p_birth
+      and bm_pinto.dorsal_name(p_name) in(bm_pinto.dorsal_name(a.player_name),bm_pinto.dorsal_name(l.canonical_name)))
+  ))
+  or (a.owner_id is null and exists(select 1 from bm_pinto.dorsal_player_links l
+   where l.assignment_id=a.id and l.birth=p_birth
+   and bm_pinto.dorsal_name(p_name) in(bm_pinto.dorsal_name(a.player_name),bm_pinto.dorsal_name(l.canonical_name))
+   and l.email_hashes @> array[encode(sha256(convert_to(lower(btrim(u.email)),'UTF8')),'hex')]))
+ );
+$$;
 create or replace function public.bm_pinto_dorsal_options(p_birth date,p_division text,p_name text default '')
 returns jsonb language plpgsql stable security definer set search_path='' as $$
 declare year_value integer; birth_year integer; own_id uuid; matches integer; own_number integer; preserved boolean:=false;
@@ -59,11 +89,8 @@ begin
   raise exception 'Revisa nacimiento y rama' using errcode='22023';
  end if;
  birth_year:=extract(year from p_birth)::integer;
- select count(*),min(id::text)::uuid,min(number),coalesce(bool_or(preserve_existing),false) into matches,own_id,own_number,preserved
- from bm_pinto.dorsal_assignments a where a.season_year=year_value and a.division=p_division
- and a.state='active' and a.owner_id=auth.uid()
- and exists(select 1 from auth.users u where u.id=auth.uid() and u.email_confirmed_at is not null)
- and birth_year between a.birth_min and a.birth_max and bm_pinto.dorsal_name(a.player_name)=bm_pinto.dorsal_name(p_name);
+ select count(*),min(m.id::text)::uuid,min(m.number),coalesce(bool_or(m.preserved),false) into matches,own_id,own_number,preserved
+ from bm_pinto.owned_dorsal(p_birth,p_division,p_name) m;
  if matches>1 then raise exception 'El club debe revisar el dorsal asignado' using errcode='PT409'; end if;
  -- Una coincidencia historica no obliga a cambiar el dorsal de su titular.
  -- Esta excepcion nunca se ofrece a un nuevo jugador ni a una cuenta ajena.
@@ -128,9 +155,7 @@ begin
   if not (options->'available' @> to_jsonb(array[number_value])) then
    raise exception 'Ese dorsal ya no esta disponible. Elige otro numero.' using errcode='PT410';
   end if;
-  select a.id into own_id from bm_pinto.dorsal_assignments a where a.season_year=year_value and a.division=player->>'division'
-  and a.state='active' and a.owner_id=auth.uid() and birth_year between a.birth_min and a.birth_max
-  and bm_pinto.dorsal_name(a.player_name)=bm_pinto.dorsal_name(player->>'name');
+  select m.id into own_id from bm_pinto.owned_dorsal(birth_value,player->>'division',player->>'name') m;
   -- Un jugador no puede ocupar dos posiciones de la misma inscripcion.
   if own_id is not null and exists(select 1 from bm_pinto.registration_dorsals d where d.assignment_id=own_id) then
    raise exception 'El jugador ya tiene una inscripcion con este dorsal' using errcode='PT409';
@@ -138,7 +163,10 @@ begin
   if own_id is null then
    insert into bm_pinto.dorsal_assignments(season_year,division,number,birth_min,birth_max,player_name,owner_id,registration_id)
    values(year_value,player->>'division',number_value,birth_year,birth_year,player->>'name',auth.uid(),submission_id) returning id into number_id;
-  else number_id:=own_id; end if;
+  else
+   number_id:=own_id;
+   update bm_pinto.dorsal_assignments set owner_id=auth.uid() where id=own_id and owner_id is null;
+  end if;
   insert into bm_pinto.registration_dorsals values(submission_id,idx,number_id,number_value);
  end loop;
  insert into bm_pinto.dorsal_submission_fingerprints values(submission_id,fingerprint_value);
@@ -166,5 +194,6 @@ end;$$;
 revoke all on function public.bm_pinto_my_registration_dorsals() from public,anon,authenticated;
 grant execute on function public.bm_pinto_my_registration_dorsals() to authenticated;
 revoke all on function bm_pinto.dorsal_category(integer,integer),bm_pinto.dorsal_name(text),bm_pinto.dorsal_overlap(integer,integer,integer,integer,integer) from public,anon,authenticated;
+revoke all on function bm_pinto.owned_dorsal(date,text,text) from public,anon,authenticated;
 notify pgrst,'reload schema';
 commit;

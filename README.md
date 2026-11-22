@@ -56,6 +56,24 @@ privada se conserva al reimportar, aunque la hoja original siga mostrando DUDA.
 Las coincidencias historicas entre jugadores activos se conservan sin reasignar.
 Los nombres abreviados y las asignaciones sin titular requieren conciliacion del club.
 
+La consulta local `http://127.0.0.1:8140/inscripciones?dorsales=hoja` carga la copia
+privada `../private-dorsales/140-registros.json` en una base independiente en memoria.
+Solo devuelve numeros disponibles, siempre como visitante, sin recuperar titulares.
+No permite enviar inscripciones. No modifica la hoja ni mezcla reservas con el demo.
+Si falta la copia privada, la consulta falla sin recurrir a Supabase operativo.
+
+`dev/link-history.cjs` propone vinculos por nombre completo normalizado, rama y
+cohorte, con unicidad en ambos sentidos. Las abreviaturas solo generan sugerencias.
+`dev/import-private-links.cjs RUTA_JSON` importa los vinculos exactos a sheet-audit.
+Se conserva fecha completa y hashes SHA256 de los correos historicos, nunca el
+correo en claro en esta tabla. La recuperacion de un dorsal exige cuenta con correo
+verificado coincidente, nombre y fecha completa. El titular queda fijado solo al
+guardar toda la inscripcion, dentro de la misma transaccion. Un cambio posterior
+del correo de la misma cuenta no pierde el dorsal ya recuperado.
+
+Resultado inicial privado: 13 vinculos exactos; 131 asignaciones con sugerencias
+de nombres abreviados y 67 sin propuesta. No se aprueban sugerencias automaticamente.
+
 ## Antes de integrar
 
 - Respetar coincidencias historicas y confirmar bajas; vincular dorsales existentes con jugadores.

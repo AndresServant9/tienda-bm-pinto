@@ -4,6 +4,15 @@ const root=path.resolve(__dirname,'..'),userId='14000000-0000-4000-8000-00000000
 const user={id:userId,email:'familia@example.test',email_confirmed_at:'2026-11-01T12:00:00Z',user_metadata:{full_name:'Familia de ejemplo',phone:'600000000'}};
 const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.png':'image/png','.webmanifest':'application/manifest+json'};
 let serial=Promise.resolve();
+let sheetSource;
+async function getSheetSource(){
+ if(!sheetSource)sheetSource=(async()=>{
+  const {createReadOnlySource}=require('./private-source.cjs');
+  const records=JSON.parse(await fs.readFile(path.resolve(__dirname,'../../private-dorsales/140-registros.json'),'utf8'));
+  return createReadOnlySource(records);
+ })().catch(e=>{sheetSource=undefined;throw e;});
+ return sheetSource;
+}
 (async()=>{await fs.mkdir(path.join(root,'.dev-data'),{recursive:true});const db=await createDatabase(path.join(root,'.dev-data','database'));
  const server=http.createServer(async(req,res)=>{try{
   const url=new URL(req.url,'http://127.0.0.1');
@@ -16,6 +25,14 @@ let serial=Promise.resolve();
    if(endpoint==='/auth/v1/logout')return send({});
    if(endpoint.startsWith('/auth/'))return send({message:'Solo acceso con cuenta ficticia. No se envian correos.'},400);
    const rpc=endpoint.split('/').pop();
+   if(req.headers['x-club-dorsal-source']==='sheet'){
+    if(rpc==='bm_pinto_dorsal_options'){
+     try{return send(await (await getSheetSource()).options(body));}
+     catch{return send({code:'SOURCE_UNAVAILABLE',message:'La copia privada de la hoja no está disponible o los datos de consulta no son válidos.'},503);}
+    }
+    if(rpc==='bm_pinto_is_admin'||rpc==='bm_pinto_check_public_member')return send(false);
+    return send({code:'READ_ONLY',message:'Consulta de la hoja: no se permiten envíos ni cambios.'},403);
+   }
    if(rpc==='bm_pinto_is_admin')return send(false);
    if(rpc==='bm_pinto_check_public_member')return send(false);
    if(rpc==='bm_pinto_my_registration_history')return send([]);
@@ -35,5 +52,5 @@ let serial=Promise.resolve();
   res.writeHead(200,headers);res.end(data);
  }catch(e){res.writeHead(e.code==='ENOENT'?404:400);res.end('No disponible en el entorno de pruebas.');}});
  server.listen(8140,'127.0.0.1',()=>console.log('Pruebas aisladas: http://127.0.0.1:8140/inscripciones | cuenta familia@example.test'));
- const stop=()=>server.close(async()=>{await db.close();process.exit(0);});process.on('SIGINT',stop);process.on('SIGTERM',stop);
+ const stop=()=>server.close(async()=>{await db.close();if(sheetSource)await (await sheetSource).close();process.exit(0);});process.on('SIGINT',stop);process.on('SIGTERM',stop);
 })().catch(e=>{console.error(e.message);process.exitCode=1;});
