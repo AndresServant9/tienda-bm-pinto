@@ -76,9 +76,15 @@ unica en ambas listas. Activar esa regla expresamente con
 `--club-unique-prefix` al importar el JSON producido por el comparador con
 `allowUniqueAbbreviations: true`. No se aceptan nombres solos ni apellidos parciales.
 Si hay nombres repetidos en otra cohorte, quedan pendientes igualmente.
-Resultado privado revisado: 136 vinculos (10 exactos y 126 abreviados aprobados),
-8 registros ambiguos y 67 sin propuesta. Tres vinculos exactos anteriores quedan
-apartados al detectar duplicados con la regla ampliada; no se borra ningun dorsal.
+Los homonimos solo se resuelven con una decision privada explicita del club,
+procesada por `dev/confirmed-links.cjs` y pasada al importador mediante
+`--club-decisions RUTA_JSON`. No existe una excepcion desde el formulario publico.
+El club confirmo los cuatro casos pendientes: dos pares de homonimos distintos
+y dos jugadores repetidos en Territorial/Nacional. Se conserva una reserva por
+jugador repetido, sin borrar las entradas de origen ni liberar su numero.
+Resultado privado revisado: 142 jugadores vinculados y 67 sin ficha localizada;
+ningun caso ambiguo de los detectados queda pendiente. Son 209 reservas activas,
+30 bajas y 2 copias consolidadas, con las 241 entradas originales conservadas.
 
 ## Antes de integrar
 
