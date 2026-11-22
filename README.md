@@ -23,7 +23,9 @@ se ha ensayado ademas contra una restauracion local de las funciones reales.
 Numeros 1-99. Se separan masculino y femenino. Un numero ocupado se bloquea
 cuando las categorias coinciden o son consecutivas esta temporada o la siguiente.
 Se compara por ano de nacimiento, desde prebenjamin hasta senior. Senior y Primera
-Nacional comparten el grupo senior para esta comprobacion.
+Nacional comparten el grupo senior para esta comprobacion, confirmado por el club.
+Los duplicados actuales entre ambos equipos se respetan como historicos; no se
+permiten nuevas asignaciones conflictivas entre Territorial y Nacional.
 Un dorsal ya asignado solo se reconoce si esta vinculado a la cuenta verificada,
 nombre normalizado y cohorte del jugador. Escribir el nombre de otra persona no
 permite apropiarse de su numero.

@@ -25,6 +25,20 @@ async function runHistoricalContracts(db,createRequest=fictionalRequest){
  const steal=structuredClone(request);steal.id=randomUUID();await assert.rejects(submit(steal),e=>e.code==='PT410');
  await setUser(null);const anonymous=await opts(2013,a);assert.equal(anonymous.preserved,false);assert.ok(!anonymous.available.includes(24));
  await db.exec('set role authenticated');await assert.rejects(q('update bm_pinto.dorsal_assignments set preserve_existing=true'),e=>e.code==='42501');await db.exec('reset role');
+ // Territorial y Nacional comparten control, con excepciones solo para titulares previos.
+ const territorial='Territorial historico '+suffix,national='Nacional historico '+suffix;
+ for(const [name,year]of[[territorial,1990],[national,1992]])await q('insert into bm_pinto.dorsal_assignments(season_year,division,number,birth_min,birth_max,player_name,owner_id,preserve_existing,source_key) values(2026,\'male\',89,$1,$1,$2,$3,true,$4)',[year,name,family,'legacy-senior-'+randomUUID()]);
+ await setUser(family);assert.deepEqual((await opts(1990,territorial)).available,[89]);assert.deepEqual((await opts(1992,national)).available,[89]);
+ for(const team of ['territorial','national']){
+  const adult=createRequest();adult.id=randomUUID();const p=adult.summary.players[0];
+  Object.assign(p,{name:'Senior nuevo '+team+' '+suffix,category:'Sénior',division:'male',team,hasKit:true,member:false,payments:team==='national'?[0,0,0]:[200,0,160]});delete p.equipment;
+  adult.summary.players=[p];adult.summary.total=team==='national'?0:360;adult.summary.payment='single';
+  adult.details.players=[{...adult.details.players[0],birth:'1995-04-15',guardianId:''}];adult.details.dorsals=[88];
+  if(team==='national')adult.receipt=null;
+  await assert.rejects(submit(adult),e=>e.code==='PT410');
+  assert.equal((await q('select count(*)::int as n from bm_pinto.registration_tests where id=$1',[adult.id]))[0].n,0);
+ }
+ console.log('PASS: Territorial y Nacional comparten disponibilidad; sus duplicados historicos se respetan y ambos rechazan nuevas reservas ocupadas.');
  console.log('PASS: dos dorsales historicos coincidentes se conservan, incluidas dos personas de la misma familia; nuevas asignaciones, suplantacion y excepcion client-side bloqueadas.');
 }
 if(require.main===module)(async()=>{const db=await createDatabase();try{await runHistoricalContracts(db);}finally{await db.close();}})().catch(e=>{console.error(e.code,e.stack);process.exitCode=1;});
