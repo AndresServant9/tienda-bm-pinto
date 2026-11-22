@@ -86,9 +86,16 @@ En una segunda revision de los 67 casos el club confirmo 21 bajas, 10 identidade
 con nombres compuestos omitidos y una titular pendiente de identificar. Los nombres
 compuestos solo se aceptan con decision expresa, conservando todos los tokens del
 nombre abreviado y su orden; el comparador automatico sigue siendo mas estricto.
-Resultado privado actual: 152 jugadores vinculados, 35 reservas activas sin ficha
-y una reserva en revision. Son 187 reservas activas, una en revision, 51 bajas y
+Tras confirmar edades, una rama incorrecta del historico y nombres femeninos,
+el resultado privado actual es 174 jugadores vinculados, 13 reservas activas sin ficha
+y una reserva en revision. Los cambios de fecha se guardan en una copia revisada
+del historico con sus decisiones; el original se conserva sin editar.
+Son 187 reservas activas, una en revision, 51 bajas y
 2 copias consolidadas, con las 241 entradas originales conservadas.
+Los alias masculinos confirmados por el club se muestran con su nombre completo
+en la copia revisada; se conservan los nombres originales y la decision privada.
+Oliver figura como nacido en 2020. Los anos historicos imposibles siguen pendientes
+de confirmacion, sin asumir un ano a partir de sus dos ultimas cifras.
 
 ## Antes de integrar
 
