@@ -82,9 +82,13 @@ procesada por `dev/confirmed-links.cjs` y pasada al importador mediante
 El club confirmo los cuatro casos pendientes: dos pares de homonimos distintos
 y dos jugadores repetidos en Territorial/Nacional. Se conserva una reserva por
 jugador repetido, sin borrar las entradas de origen ni liberar su numero.
-Resultado privado revisado: 142 jugadores vinculados y 67 sin ficha localizada;
-ningun caso ambiguo de los detectados queda pendiente. Son 209 reservas activas,
-30 bajas y 2 copias consolidadas, con las 241 entradas originales conservadas.
+En una segunda revision de los 67 casos el club confirmo 21 bajas, 10 identidades
+con nombres compuestos omitidos y una titular pendiente de identificar. Los nombres
+compuestos solo se aceptan con decision expresa, conservando todos los tokens del
+nombre abreviado y su orden; el comparador automatico sigue siendo mas estricto.
+Resultado privado actual: 152 jugadores vinculados, 35 reservas activas sin ficha
+y una reserva en revision. Son 187 reservas activas, una en revision, 51 bajas y
+2 copias consolidadas, con las 241 entradas originales conservadas.
 
 ## Antes de integrar
 

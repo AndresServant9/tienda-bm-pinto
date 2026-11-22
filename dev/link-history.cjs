@@ -8,6 +8,13 @@ const matchesName=(shortName,fullName,allowAbbreviations=false)=>{
  const short=nameKey(shortName),full=nameKey(fullName);
  return short===full||(allowAbbreviations&&short.split(' ').length>=2&&full.startsWith(short+' '));
 };
+// Only for an explicit identity decision: omitted compound given names.
+const confirmedNameMatches=(shortName,fullName)=>{
+ const short=nameKey(shortName).split(' '),full=nameKey(fullName).split(' ');
+ if(short.length<2)return false;
+ let next=0;for(const token of full)if(token===short[next])next++;
+ return next===short.length;
+};
 function linkHistory(assignments,history,{allowUniqueAbbreviations=false}={}){
  const current=history.filter(h=>h.is_current&&validDate(h.profile.birth));
  const active=assignments.filter(a=>a.state==='active');
@@ -31,4 +38,4 @@ function linkHistory(assignments,history,{allowUniqueAbbreviations=false}={}){
  }
  return {links,review};
 }
-module.exports={linkHistory,nameKey,emailHashes,validDate,matchesName};
+module.exports={linkHistory,nameKey,emailHashes,validDate,matchesName,confirmedNameMatches};
