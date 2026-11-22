@@ -87,7 +87,7 @@ con nombres compuestos omitidos y una titular pendiente de identificar. Los nomb
 compuestos solo se aceptan con decision expresa, conservando todos los tokens del
 nombre abreviado y su orden; el comparador automatico sigue siendo mas estricto.
 Tras confirmar edades, una rama incorrecta del historico y nombres femeninos,
-el resultado privado actual es 174 jugadores vinculados, 13 reservas activas sin ficha
+el resultado privado actual es 176 jugadores vinculados, 11 reservas activas sin ficha
 y una reserva en revision. Los cambios de fecha se guardan en una copia revisada
 del historico con sus decisiones; el original se conserva sin editar.
 Son 187 reservas activas, una en revision, 51 bajas y
