@@ -490,6 +490,7 @@ if (typeof document !== 'undefined') {
     player.dorsalKey = key;
     const previous = select.value, revision = (player.dorsalRevision || 0) + 1;
     player.dorsalRevision = revision;
+    select.dataset.preserved = 'false';
     select.disabled = true;
     select.replaceChildren(new Option('Indica nacimiento, rama y nombre', ''));
     status.textContent = '';
@@ -508,10 +509,11 @@ if (typeof document !== 'undefined') {
         if (revision !== player.dorsalRevision || !player.isConnected) return;
         select.replaceChildren(new Option(data.available.length ? 'Selecciona un dorsal' : 'No hay dorsales disponibles', ''), ...data.available.map(n => new Option(String(n), String(n))));
         select.disabled = false;
+        select.dataset.preserved = String(data.preserved === true);
         if (data.own_number && data.available.includes(data.own_number)) select.value = String(data.own_number);
         else if (data.available.includes(Number(previous))) select.value = previous;
         status.dataset.kind = 'info';
-        status.textContent = data.own_number ? 'Se conserva tu dorsal asignado: ' + data.own_number + '.' :
+        status.textContent = data.own_number && data.available.includes(data.own_number) ? 'Se conserva tu dorsal asignado: ' + data.own_number + '.' :
           data.available.length ? 'Solo se muestran los dorsales disponibles. Se reservará al confirmar la inscripción.' : 'El club debe revisar las asignaciones. Contacta con nosotros.';
       } catch (error) {
         if (revision !== player.dorsalRevision) return;
@@ -641,6 +643,7 @@ if (typeof document !== 'undefined') {
     await Promise.all([...container.children].map(player => refreshDorsal(player, true)));
     const dorsalPlayers = [...container.children].map(player => ({
       number: Number(field(player, 'dorsal').value), division: field(player, 'division').value,
+      preserved: field(player, 'dorsal').dataset.preserved === 'true',
       birthYear: Number(field(player, 'birth').value.slice(0,4)),
     }));
     if (dorsalPlayers.some(player => !Number.isInteger(player.number) || player.number < 1 || player.number > 99)) throw Error('Selecciona un dorsal disponible para cada jugador.');

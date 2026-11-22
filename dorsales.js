@@ -12,7 +12,8 @@
   }
   function checkFamily(players, seasonYear) {
     for (let i=0;i<players.length;i++) for (let j=i+1;j<players.length;j++) {
-      if (players[i].number === players[j].number && conflicts(players[i], players[j], seasonYear)) {
+      if (players[i].number === players[j].number && conflicts(players[i], players[j], seasonYear) &&
+          !(players[i].preserved === true && players[j].preserved === true)) {
         throw Error('El dorsal ' + players[i].number + ' coincide entre jugadores de esta inscripción que pueden jugar juntos. Elige otro número.');
       }
     }

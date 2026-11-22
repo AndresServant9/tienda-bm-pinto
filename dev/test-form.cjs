@@ -31,6 +31,15 @@ const pause=ms=>new Promise(r=>setTimeout(r,ms));
   // Una respuesta antigua no puede pisar la rama o nacimiento elegidos despues.
   let unblock;const previousFetch=w.fetch;w.fetch=async(input,init)=>{const p=JSON.parse(init?.body||'{}');if(p.p_birth==='2016-03-03'){await new Promise(resolve=>{unblock=resolve;});return new Response(JSON.stringify({available:[99],own_number:null}),{headers:{'Content-Type':'application/json'}});}return previousFetch(input,init);};
   change('birth','2016-03-03');await pause(50);change('birth','2015-02-01');await pause(250);unblock();await pause(50);assert.equal(field('dorsal').value,'12');
+  // Dos hermanos con un dorsal historico coincidente deben poder revisar juntos.
+  w.fetch=async(input,init)=>{const body=JSON.parse(init?.body||'{}');if(String(input).includes('dorsal_options'))return new Response(JSON.stringify({available:[24],own_number:24,preserved:true}),{headers:{'Content-Type':'application/json'}});return previousFetch(input,init);};
+  change('playerName','Historico A');change('birth','2013-04-15');await pause(100);
+  w.document.querySelector('#add').click();const second=[...w.document.querySelectorAll('.player')][1];
+  const secondField=name=>second.querySelector('[name="'+name+'"]');
+  for(const [name,value]of Object.entries({playerName:'Historico B',birth:'2010-04-15',division:'male',address:'Domicilio ficticio',town:'Pinto',registeredInPinto:'Sí',hasKit:'yes',hasHealth:'no',outings:'No',transport:'No',images:'No'})){secondField(name).value=value;secondField(name).dispatchEvent(new w.Event('change',{bubbles:true}));}
+  secondField('noPlayerId').checked=true;secondField('noPlayerId').dispatchEvent(new w.Event('change',{bubbles:true}));await pause(150);
+  await form.onsubmit(new w.Event('submit',{cancelable:true}));assert.equal(w.document.querySelector('#summary').hidden,false);assert.equal((w.document.querySelector('#breakdown').textContent.match(/Dorsal 24/g)||[]).length,2);
+  assert.equal(field('dorsal').dataset.preserved,'true');assert.equal(secondField('dorsal').dataset.preserved,'true');
   console.log('PASS DOM: selector compacto, busqueda, numeros ocupados, cierre, cambio de nacimiento/rama, dorsal propio, resumen, respuesta desactualizada y peticiones solo locales.');
  }finally{dom.window.close();}
 })().catch(e=>{console.error(e.stack);process.exitCode=1;});

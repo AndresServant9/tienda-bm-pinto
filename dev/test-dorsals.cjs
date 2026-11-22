@@ -8,7 +8,7 @@ async function runContracts(db,createRequest){
  const setUser=async id=>q("select set_config('request.jwt.claim.sub',$1,false)",[id||'']);
  const options=async(birth,division='male',name='Nuevo de ejemplo')=>(await q('select public.bm_pinto_dorsal_options($1::date,$2,$3) as data',[birth,division,name]))[0].data;
  await setUser(null);
- const empty=await options('2015-02-01');assert.ok(!empty.available.includes(7),'alevin segundo y cadete primero');assert.ok(!empty.available.includes(12));assert.equal(empty.own_number,null);assert.deepEqual(Object.keys(empty).sort(),['available','own_number','season_year']);
+ const empty=await options('2015-02-01');assert.ok(!empty.available.includes(7),'alevin segundo y cadete primero');assert.ok(!empty.available.includes(12));assert.equal(empty.own_number,null);assert.deepEqual(Object.keys(empty).sort(),['available','own_number','preserved','season_year']);
  assert.ok((await options('2016-02-01')).available.includes(7),'dos categorias y sin cruce la siguiente temporada');
  assert.ok((await options('2015-02-01','female')).available.includes(7),'ramas independientes');
  assert.ok(!(await options('2009-02-01')).available.includes(88),'juvenil y senior');

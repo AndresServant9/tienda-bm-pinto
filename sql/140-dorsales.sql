@@ -15,6 +15,8 @@ create table if not exists bm_pinto.dorsal_assignments (
  source_key text unique,
  created_at timestamptz not null default now()
 );
+-- Solo el club/importacion privada marca dorsales que ya existian antes de la app.
+alter table bm_pinto.dorsal_assignments add column if not exists preserve_existing boolean not null default false;
 create table if not exists bm_pinto.registration_dorsals (
  registration_id uuid not null references bm_pinto.registration_tests(id) on delete cascade,
  player_index integer not null check(player_index between 0 and 11),
@@ -48,7 +50,7 @@ returns boolean language sql immutable set search_path='' as $$
 $$;
 create or replace function public.bm_pinto_dorsal_options(p_birth date,p_division text,p_name text default '')
 returns jsonb language plpgsql stable security definer set search_path='' as $$
-declare year_value integer; birth_year integer; own_id uuid; matches integer; own_number integer;
+declare year_value integer; birth_year integer; own_id uuid; matches integer; own_number integer; preserved boolean:=false;
 begin
  select start_year into year_value from bm_pinto.campaign_release_state where singleton;
  if year_value is null then raise exception 'Temporada sin configurar'; end if;
@@ -57,13 +59,19 @@ begin
   raise exception 'Revisa nacimiento y rama' using errcode='22023';
  end if;
  birth_year:=extract(year from p_birth)::integer;
- select count(*),min(id::text)::uuid,min(number) into matches,own_id,own_number
+ select count(*),min(id::text)::uuid,min(number),coalesce(bool_or(preserve_existing),false) into matches,own_id,own_number,preserved
  from bm_pinto.dorsal_assignments a where a.season_year=year_value and a.division=p_division
  and a.state='active' and a.owner_id=auth.uid()
  and exists(select 1 from auth.users u where u.id=auth.uid() and u.email_confirmed_at is not null)
  and birth_year between a.birth_min and a.birth_max and bm_pinto.dorsal_name(a.player_name)=bm_pinto.dorsal_name(p_name);
  if matches>1 then raise exception 'El club debe revisar el dorsal asignado' using errcode='PT409'; end if;
+ -- Una coincidencia historica no obliga a cambiar el dorsal de su titular.
+ -- Esta excepcion nunca se ofrece a un nuevo jugador ni a una cuenta ajena.
+ if matches=1 and preserved then
+  return jsonb_build_object('season_year',year_value,'own_number',own_number,'preserved',true,'available',jsonb_build_array(own_number));
+ end if;
  return jsonb_build_object('season_year',year_value,'own_number',case when matches=1 then own_number else null end,
+ 'preserved',false,
  'available',coalesce((select jsonb_agg(n order by n) from generate_series(1,99) n
  where (matches=0 or n=own_number) and not exists(select 1 from bm_pinto.dorsal_assignments a
  where a.season_year=year_value and a.division=p_division and a.number=n and a.state<>'released'

@@ -28,6 +28,13 @@ Un dorsal ya asignado solo se reconoce si esta vinculado a la cuenta verificada,
 nombre normalizado y cohorte del jugador. Escribir el nombre de otra persona no
 permite apropiarse de su numero.
 
+Las coincidencias que ya existian se respetan por decision del club. La importacion
+privada las marca como `preserve_existing`; sus titulares conservan el numero aunque
+coincidan con otro dorsal antiguo. Tambien se permite ese caso dentro de una familia.
+Las nuevas asignaciones siguen bloqueadas por los dorsales existentes. Una familia no
+puede concederse esa excepcion desde el formulario. Al preparar una nueva temporada
+debe conservarse la marca historica al trasladar las asignaciones de sus titulares.
+
 Se consulta sin mostrar nombres ajenos. Se reserva en la misma transaccion que la
 inscripcion. Un bloqueo transaccional vuelve a validar disponibilidad al enviar.
 El mismo envio es idempotente; un reintento distinto o con numero ocupado se rechaza.
@@ -45,7 +52,7 @@ Los nombres abreviados y las asignaciones sin titular requieren conciliacion del
 
 ## Antes de integrar
 
-- Resolver conflictos y confirmar bajas; vincular dorsales existentes con jugadores.
+- Respetar coincidencias historicas y confirmar bajas; vincular dorsales existentes con jugadores.
 - El selector se ha probado en navegador de escritorio y vistas de 390 y 320 pixeles,
   sin desbordamiento horizontal. Falta probar teclado tactil en Android/iOS reales.
 - Hacer prueba de concurrencia con dos conexiones PostgreSQL independientes.
