@@ -20,7 +20,9 @@ se ha ensayado ademas contra una restauracion local de las funciones reales.
 
 ## Regla de dorsal
 
-Numeros 1-99. Se separan masculino y femenino. Un numero ocupado se bloquea
+Numeros 1-99. Benjamín y Prebenjamín comparten numeracion entre masculino y
+femenino: ninguna nueva alta de esos dos grupos puede repetir dorsal, aunque
+sea de otra rama. Desde Alevín las ramas se comprueban por separado. Un numero ocupado se bloquea
 cuando las categorias coinciden o son consecutivas esta temporada o la siguiente.
 Se compara por ano de nacimiento, desde prebenjamin hasta senior. Senior y Primera
 Nacional comparten el grupo senior para esta comprobacion, confirmado por el club.
@@ -87,11 +89,14 @@ con nombres compuestos omitidos y una titular pendiente de identificar. Los nomb
 compuestos solo se aceptan con decision expresa, conservando todos los tokens del
 nombre abreviado y su orden; el comparador automatico sigue siendo mas estricto.
 Tras confirmar edades, una rama incorrecta del historico y nombres femeninos,
-el resultado privado actual es 176 jugadores vinculados, 11 reservas activas sin ficha
+el resultado privado actual es 176 jugadores vinculados, 13 reservas activas sin ficha
 y una reserva en revision. Los cambios de fecha se guardan en una copia revisada
 del historico con sus decisiones; el original se conserva sin editar.
-Son 187 reservas activas, una en revision, 51 bajas y
-2 copias consolidadas, con las 241 entradas originales conservadas.
+Son 189 reservas activas, una en revision, 51 bajas y
+2 copias consolidadas. Se conservan las 241 entradas originales y dos nuevas
+reservas autorizadas del club, incluidas en la copia privada mediante un archivo
+adicional persistente. No se duplica una fila por cada rama: la regla compartida
+bloquea el numero en ambas al consultar y confirmar una inscripcion.
 Los alias masculinos confirmados por el club se muestran con su nombre completo
 en la copia revisada; se conservan los nombres originales y la decision privada.
 Oliver figura como nacido en 2020. Los anos historicos imposibles siguen pendientes

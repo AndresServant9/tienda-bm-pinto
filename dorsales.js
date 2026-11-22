@@ -7,8 +7,10 @@
     return Math.min(6, Math.max(0, Math.floor((seasonYear - birthYear - 6) / 2)));
   }
   function conflicts(a, b, seasonYear) {
-    if (a.division !== b.division) return false;
-    return [seasonYear, seasonYear + 1].some(year => Math.abs(categoryIndex(a.birthYear, year) - categoryIndex(b.birthYear, year)) <= 1);
+    return [seasonYear, seasonYear + 1].some(year => {
+      const first=categoryIndex(a.birthYear, year),second=categoryIndex(b.birthYear, year);
+      return Math.abs(first-second)<=1 && (a.division===b.division || (first<=1 && second<=1));
+    });
   }
   function checkFamily(players, seasonYear) {
     for (let i=0;i<players.length;i++) for (let j=i+1;j<players.length;j++) {

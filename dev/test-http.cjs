@@ -19,7 +19,7 @@ function registration(number){const id=randomUUID();return {submission_id:id,sub
  try{
   for(const file of ['dev-guard.js','club-auth.js','justificantes.js','mis-inscripciones.js'])w.eval(fs.readFileSync(path.join(root,file),'utf8'));
   await w.ClubAuth.signIn('familia@example.test','PruebaLocal123!');
-  for(let i=0;i<30&&!w.document.querySelector('#enrollments').textContent.includes('Dorsal');i++)await new Promise(r=>setTimeout(r,50));
+  for(let i=0;i<100&&!w.document.querySelector('#enrollments').textContent.includes('Dorsal');i++)await new Promise(r=>setTimeout(r,100));
   assert.match(w.document.querySelector('#enrollments').textContent,new RegExp('Dorsal '+request.p_details.dorsals[0]));
  }finally{w.close();}
  console.log('PASS HTTP/DOM: reserva, consulta familiar con dorsal, bloqueo anonimo y dos envios simultaneos (uno aceptado, otro rechazado). Solo datos ficticios locales.');

@@ -36,11 +36,29 @@ async function runContracts(db,createRequest){
  assert.equal((await q('select count(*)::int as n from bm_pinto.registration_tests where id=$1',[staleB.id]))[0].n,0);
  const missing=makeRequest();missing.id=randomUUID();delete missing.details.dorsals;await assert.rejects(submit(missing),e=>e.code==='22023');
  await setUser(null);await assert.rejects(submit(makeRequest()),e=>e.code==='42501');
+ await q("insert into bm_pinto.dorsal_assignments(season_year,division,number,birth_min,birth_max,player_name) values(2026,'female',92,2020,2020,'Prebenjamina ficticia')");
+ assert.ok(!(await options('2018-04-15','male')).available.includes(92),'prebenjamina bloquea a benjamin masculino');
+ assert.ok(!(await options('2020-04-15','male')).available.includes(92),'prebenjamines de ambas ramas comparten');
+ assert.ok((await options('2015-04-15','male')).available.includes(92),'alevin masculino no comparte reserva de prebenjamina');
+ await setUser(family);const mixedBad=makeRequest();mixedBad.id=randomUUID();mixedBad.details.dorsals=[92,93];
+ await assert.rejects(submit(mixedBad),e=>e.code==='PT410');assert.equal((await q('select count(*)::int as n from bm_pinto.registration_tests where id=$1',[mixedBad.id]))[0].n,0);
+ const mixedA=makeRequest(),mixedB=makeRequest();mixedA.id=randomUUID();mixedB.id=randomUUID();mixedA.details.dorsals=[94,95];mixedB.details.dorsals=[94,96];mixedB.summary.players[0].division='female';
+ assert.ok((await options('2017-04-15','male')).available.includes(94));assert.ok((await options('2017-04-15','female')).available.includes(94));
+ await submit(mixedA);await assert.rejects(submit(mixedB),e=>e.code==='PT410');
+ for(const [division,year,name] of [['male',2018,'Historico mixto chico'],['female',2019,'Historico mixto chica']])await q('insert into bm_pinto.dorsal_assignments(season_year,division,number,birth_min,birth_max,player_name,owner_id,preserve_existing) values(2026,$1,97,$2,$2,$3,$4,true)',[division,year,name,family]);
+ assert.deepEqual((await options('2018-04-15','male','Historico mixto chico')).available,[97]);assert.deepEqual((await options('2019-04-15','female','Historico mixto chica')).available,[97]);
+ rules.checkFamily([{number:97,division:'male',birthYear:2018,preserved:true},{number:97,division:'female',birthYear:2019,preserved:true}],2026);
+ await setUser(null);assert.ok(!(await options('2018-04-15','female')).available.includes(97));
  const matrix=await q('select a,b,bm_pinto.dorsal_overlap(a,a,b,b,2026) as collision from generate_series(1995,2026) a cross join generate_series(1995,2026) b');
  for(const r of matrix)assert.equal(r.collision,rules.conflicts({division:'male',birthYear:r.a},{division:'male',birthYear:r.b},2026));
+ const mixedMatrix=await q("select a,b,x,y,bm_pinto.dorsal_collision(a,a,x,b,b,y,2026) as collision from generate_series(1995,2026) a cross join generate_series(1995,2026) b cross join (values('male'),('female')) dx(x) cross join (values('male'),('female')) dy(y)");
+ for(const r of mixedMatrix)assert.equal(r.collision,rules.conflicts({division:r.x,birthYear:r.a},{division:r.y,birthYear:r.b},2026));
+ for(const [a,b] of [[2017,2018],[2017,2020],[2020,2021],[2018,2019]])assert.throws(()=>rules.checkFamily([{number:91,division:'male',birthYear:a},{number:91,division:'female',birthYear:b}],2026));
+ rules.checkFamily([{number:91,division:'male',birthYear:2015},{number:91,division:'female',birthYear:2015}],2026);
+ assert.ok(!rules.conflicts({division:'male',birthYear:2018},{division:'female',birthYear:2016},2026),'alevin femenino no forma parte de los equipos mixtos');
  assert.throws(()=>rules.checkFamily([{number:7,division:'male',birthYear:2015},{number:7,division:'male',birthYear:2012}],2026));
  rules.checkFamily([{number:7,division:'male',birthYear:2016},{number:7,division:'male',birthYear:2012}],2026);
- console.log('PASS: dorsales, ramas, prebenjamin-senior, siguiente temporada, titular, privacidad, reintento, rechazo atomico y cliente desactualizado; 1024 pares JS/SQL.');
+ console.log('PASS: Benjamín/Prebenjamín comparten ramas, otras categorias separadas, 4096 pares JS/SQL, bloqueo atomico entre ramas, titulares historicos, privacidad e idempotencia.');
 }
 function fictionalRequest(){return {id:randomUUID(),summary:{registration_day:'2026-11-22',payment:'split',member:false,total:880,players:[{name:'Nuevo A',category:'Benjamín',division:'male',team:'standard',hasKit:false,payments:[80,150,150]},{name:'Nuevo B',category:'Alevín',division:'male',team:'standard',hasKit:false,payments:[80,200,160]}]},details:{players:[{birth:'2017-04-15'},{birth:'2015-04-15'}]},receipt:null};}
 if(require.main===module)(async()=>{const db=await createDatabase();try{await runContracts(db,fictionalRequest);await db.exec(fs.readFileSync(path.join(__dirname,'../sql/140-dorsales.sql'),'utf8'));console.log('PASS: migracion reejecutable.');}finally{await db.close();}})().catch(e=>{console.error('FAIL',e.code,e.message);process.exitCode=1;});

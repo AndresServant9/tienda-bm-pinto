@@ -1,5 +1,5 @@
 -- RAMA DE DESARROLLO: aplicar solo a la base aislada hasta integrar frontend y backend.
--- Numeros del 1 al 99; sexo independiente, categoria actual y proxima temporada.
+-- Numeros 1-99; Benjamín/Prebenjamín comparten ramas; resto separado por sexo.
 begin;
 create table if not exists bm_pinto.dorsal_assignments (
  id uuid primary key default gen_random_uuid(),
@@ -43,6 +43,7 @@ alter table bm_pinto.registration_dorsals enable row level security;
 alter table bm_pinto.dorsal_submission_fingerprints enable row level security;
 revoke all on bm_pinto.dorsal_assignments,bm_pinto.registration_dorsals,bm_pinto.dorsal_submission_fingerprints from public,anon,authenticated;
 create index if not exists dorsal_availability_idx on bm_pinto.dorsal_assignments(season_year,division,number) where state<>'released';
+create index if not exists dorsal_shared_availability_idx on bm_pinto.dorsal_assignments(season_year,number) where state<>'released';
 
 create or replace function bm_pinto.dorsal_category(birth_year integer,season_year integer)
 returns integer language sql immutable set search_path='' as $$
@@ -57,6 +58,12 @@ returns boolean language sql immutable set search_path='' as $$
  select exists(select 1 from generate_series(season_year,season_year+1) y
  where bm_pinto.dorsal_category(a_max,y)<=bm_pinto.dorsal_category(b_min,y)+1
  and bm_pinto.dorsal_category(b_max,y)<=bm_pinto.dorsal_category(a_min,y)+1);
+$$;
+create or replace function bm_pinto.dorsal_collision(a_min integer,a_max integer,a_division text,b_min integer,b_max integer,b_division text,season_year integer)
+returns boolean language sql immutable set search_path='' as $$
+ select (a_division=b_division and bm_pinto.dorsal_overlap(a_min,a_max,b_min,b_max,season_year))
+ or exists(select 1 from generate_series(season_year,season_year+1) y
+ where bm_pinto.dorsal_category(a_max,y)<=1 and bm_pinto.dorsal_category(b_max,y)<=1);
 $$;
 create or replace function bm_pinto.owned_dorsal(p_birth date,p_division text,p_name text)
 returns table(id uuid,number integer,preserved boolean) language sql stable set search_path='' as $$
@@ -101,8 +108,8 @@ begin
  'preserved',false,
  'available',coalesce((select jsonb_agg(n order by n) from generate_series(1,99) n
  where (matches=0 or n=own_number) and not exists(select 1 from bm_pinto.dorsal_assignments a
- where a.season_year=year_value and a.division=p_division and a.number=n and a.state<>'released'
- and a.id is distinct from own_id and bm_pinto.dorsal_overlap(birth_year,birth_year,a.birth_min,a.birth_max,year_value))),'[]'::jsonb));
+ where a.season_year=year_value and a.number=n and a.state<>'released'
+ and a.id is distinct from own_id and bm_pinto.dorsal_collision(birth_year,birth_year,p_division,a.birth_min,a.birth_max,a.division,year_value))),'[]'::jsonb));
 end;$$;
 revoke all on function public.bm_pinto_dorsal_options(date,text,text) from public,anon,authenticated;
 grant execute on function public.bm_pinto_dorsal_options(date,text,text) to anon,authenticated;
@@ -195,5 +202,6 @@ revoke all on function public.bm_pinto_my_registration_dorsals() from public,ano
 grant execute on function public.bm_pinto_my_registration_dorsals() to authenticated;
 revoke all on function bm_pinto.dorsal_category(integer,integer),bm_pinto.dorsal_name(text),bm_pinto.dorsal_overlap(integer,integer,integer,integer,integer) from public,anon,authenticated;
 revoke all on function bm_pinto.owned_dorsal(date,text,text) from public,anon,authenticated;
+revoke all on function bm_pinto.dorsal_collision(integer,integer,text,integer,integer,text,integer) from public,anon,authenticated;
 notify pgrst,'reload schema';
 commit;
