@@ -64,9 +64,14 @@ function node(tag, content) {
 function enrollment(row, rejections) {
   const card = node('article', '');
   const account = row.payments;
-  const names = (account.player_names ?? []).filter(name => typeof name === 'string' && name.trim() && !name.includes('@'));
-  card.append(node('h2', names.length ? names.join(' · ') : 'Inscripción · ' + row.categories.join(' · ')));
-  if (names.length) card.append(node('p', row.categories.join(' · ')));
+  const namedPlayers = (account.player_names ?? []).map((name,index)=>({name,index})).filter(({name}) => typeof name === 'string' && name.trim() && !name.includes('@'));
+  const names=(account.player_names ?? []);
+  const heading=node('h2','');
+  if(namedPlayers.length)namedPlayers.forEach(({name,index},position)=>{if(position)heading.append(document.createTextNode(' · '));const link=node('a',name);link.href='ficha-jugador.html?registration='+encodeURIComponent(row.id)+'&index='+index+'&return=mis-inscripciones.html';link.target='_blank';link.rel='noopener';heading.append(link);});
+  else heading.textContent='Inscripción · '+row.categories.join(' · ');
+  card.append(heading);
+  if (namedPlayers.length) card.append(node('p', row.categories.join(' · ')));
+  if (row.dorsals?.length) card.append(node('p', row.dorsals.map(d => (names[d.player_index] || 'Jugador ' + (d.player_index + 1)) + ' · Dorsal ' + d.number).join(' / ')));
   if (account.agreement_pending) {
     card.append(node('p', 'Acuerdo pendiente de concretar'));
     return card;
@@ -193,11 +198,13 @@ function receiptForm(id, payment) {
 
 async function loadEnrollments(session) {
   const rows = await post('/rest/v1/rpc/bm_pinto_my_registration_tests', {}, session);
-  const [rejections, discount] = await Promise.all([
+  const [rejections, discount, dorsals] = await Promise.all([
     post('/rest/v1/rpc/bm_pinto_my_registration_test_receipt_rejections', {}, session).catch(() => []),
     post('/rest/v1/rpc/bm_pinto_my_registration_test_membership_discount', {}, session).catch(() => null),
+    post('/rest/v1/rpc/bm_pinto_my_registration_dorsals', {}, session),
   ]);
   if (token === session) {
+    for (const row of rows) row.dorsals = dorsals.filter(d => d.registration_id === row.id);
     const membership = get('membershipDiscount');
     membership.hidden = !discount || Number(discount.discount) <= 0;
     membership.textContent = membership.hidden ? '' :

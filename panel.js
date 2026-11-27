@@ -500,10 +500,12 @@ function render() {
     if (row.summary.players.some(player => player.name)) {
       const roster = document.createElement('ul');
       roster.className = 'registration-players';
-      for (const player of row.summary.players) {
+      for (const [playerIndex,player] of row.summary.players.entries()) {
         const member = document.createElement('li');
-        member.append(item('strong', player.name || 'Jugador sin nombre registrado'),
+        const playerLink=item('a',player.name||'Jugador sin nombre registrado');playerLink.href='ficha-jugador.html?registration='+encodeURIComponent(row.id)+'&index='+playerIndex+'&return=panel.html';playerLink.target='_blank';playerLink.rel='noopener';
+        member.append(playerLink,
           item('span', teamName(player)));
+        if (player.dorsal) member.append(item('span', 'Dorsal ' + player.dorsal));
         const equipment = player.equipment;
         const kitInfo = player.hasKit ? 'Ya tiene el pack inicial'
           : !equipment ? 'Necesita el pack · Datos de prendas sin registrar'
@@ -567,12 +569,13 @@ function render() {
 
 async function load() {
   const current = ++revision;
-  const [response, paymentStates] = await Promise.all([
+  const [response, paymentStates, dorsals] = await Promise.all([
     rpc('bm_pinto_list_registration_tests'),
     rpc('bm_pinto_registration_test_payment_states').catch(error => {
       if (error.status === 404 || error.code === 'PGRST202') return null;
       throw error;
     }),
+    rpc('bm_pinto_my_registration_dorsals'),
   ]);
   if (revision !== current) return;
   rows = response.sort((a, b) => new Date(b.received_at) - new Date(a.received_at) || a.id.localeCompare(b.id));
@@ -592,6 +595,9 @@ async function load() {
   accountFilter.disabled = !paymentStates?.some(state => typeof state.payment_flags.account_linked === 'boolean');
   if (accountFilter.disabled) accountFilter.value = '';
   for (const row of rows) {
+    for (const d of dorsals.filter(d => d.registration_id === row.id)) {
+      if (row.summary.players[d.player_index]) row.summary.players[d.player_index].dorsal = d.number;
+    }
     row.paymentFlags = flags.get(row.id);
     row.accountLinked = row.paymentFlags?.account_linked;
     row.accountEmail = row.paymentFlags?.account_email;
@@ -734,7 +740,7 @@ get('exportKits').onclick = () => {
       const goalkeeper = equipment.role === 'goalkeeper';
       const pattern = player.division === 'female' ? 'CHICA' : player.division === 'male' ? 'CHICO' : '';
       const base = {
-        'CHICO/A': pattern, Categoria: player.category, Cantidad: 1,
+        'CHICO/A': pattern, Categoria: player.category, Cantidad: 1, 'Número': player.dorsal || '',
         OBSERVACIONES: [player.name, teamName(player), equipment.fitted ? 'Tallas tomadas en el club' : '', reference(row)].filter(Boolean).join(' · '),
       };
       garments.push(
