@@ -6,7 +6,8 @@
   "dev": "node dev/server.cjs",
   "test": "node dev/test-dorsals.cjs && node dev/test-historical.cjs && node dev/test-release.cjs && node dev/test-history-links.cjs && node dev/test-confirmed-links.cjs && node dev/test-private-source.cjs",
   "test:form": "node dev/test-form.cjs",
-  "test:http": "node dev/test-http.cjs"
+  "test:http": "node dev/test-http.cjs",
+  "test:archive": "node dev/test-archive-filters.cjs"
  },
  "dependencies": {
   "@electric-sql/pglite": "0.3.14"
