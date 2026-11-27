@@ -500,9 +500,10 @@ function render() {
     if (row.summary.players.some(player => player.name)) {
       const roster = document.createElement('ul');
       roster.className = 'registration-players';
-      for (const player of row.summary.players) {
+      for (const [playerIndex,player] of row.summary.players.entries()) {
         const member = document.createElement('li');
-        member.append(item('strong', player.name || 'Jugador sin nombre registrado'),
+        const playerLink=item('a',player.name||'Jugador sin nombre registrado');playerLink.href='ficha-jugador.html?registration='+encodeURIComponent(row.id)+'&index='+playerIndex+'&return=panel.html';playerLink.target='_blank';playerLink.rel='noopener';
+        member.append(playerLink,
           item('span', teamName(player)));
         if (player.dorsal) member.append(item('span', 'Dorsal ' + player.dorsal));
         const equipment = player.equipment;

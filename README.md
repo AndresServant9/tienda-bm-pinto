@@ -114,3 +114,40 @@ de confirmacion, sin asumir un ano a partir de sus dos ultimas cifras.
 - No aplicar SQL 140 a Supabase operativo mientras `main` use el formulario anterior.
 
 Entrenadores, asistencia y convocatorias quedan fuera de este desarrollo.
+
+
+## Fichas familiares (desarrollo 160)
+
+La ficha se abre pulsando el nombre del jugador en el panel, el archivo o Mis
+inscripciones. `http://127.0.0.1:8140/ficha-jugador.html` muestra el listado familiar.
+Tras `npm run dev`, usar `familia@example.test` y `PruebaLocal123!`. La cuenta
+`admin@example.test` usa la misma contraseña ficticia para revisar la vinculación;
+`otra@example.test` comienza sin acceso. No se envían correos.
+
+Cada menor tiene identidad propia por nombre completo y nacimiento dentro de su
+familia. El documento del tutor nunca identifica a los hermanos como una persona.
+Los pedidos se consultan una sola vez por las cuentas familiares confirmadas y se
+muestran en las fichas de todos los menores. Los adultos necesitan cuenta propia
+vinculada por su documento; no heredan el acceso financiero de sus padres.
+
+El formulario permite un responsable adicional opcional, que queda pendiente.
+Anotar su correo no concede acceso ni incorpora sus compras. Solo el administrador
+puede confirmar una cuenta existente y verificada. Si ya pertenece a otra familia,
+se exige revisar el caso: no se fusionan familias automáticamente. El archivo
+antiguo se previsualiza y requiere confirmar su relación; una familia solo puede
+confirmar su propio correo. Las fechas o identidades ambiguas necesitan revisión.
+
+La ficha reúne datos deportivos, dorsal, autorizaciones, responsables, cuotas,
+pedidos y solicitudes de socio. En inscripciones con varios jugadores los importes
+se identifican como compartidos, sin repartir pagos confirmados de manera ficticia.
+Se muestran hasta los 100 pedidos más recientes. Las solicitudes se asocian por
+los correos confirmados; este cambio no importa ni modifica el padrón histórico.
+La foto es opcional y privada, reducida a 512 píxeles, sin metadatos y con un máximo
+almacenado de 512 KB; no se crea ninguna URL pública.
+
+Comprobaciones: `npm run test:family`, `npm run test:profile`,
+`npm run test:family-http` (requiere servidor), además de los tests existentes.
+SQL `sql/160-familias-y-fichas.sql` va después del 140. Solo se ha aplicado a bases
+locales de ensayo y a una restauración local; no ejecutar ni desplegar sobre la
+tienda operativa. Las guardas de desarrollo siguen activas. Para publicar hará
+falta preparar la integración coordinada con main y revisar las relaciones reales.

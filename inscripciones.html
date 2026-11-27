@@ -56,6 +56,13 @@ header.club-header { display: flex; flex-wrap: wrap; align-items: center; gap: 1
 <label id="contactIdentifierField">DNI/NIE del Padre/Madre/Tutor<input name="contactIdentifier" maxlength="12" required></label>
 <label>Correo electrónico<input type="email" name="email" required></label>
 <label>Teléfono<input type="tel" name="phone" required></label></div>
+<div id="familyRelationships" hidden>
+<label>Relación con los menores<select name="contactRelationship" disabled><option value="guardian">Padre/Madre/Tutor</option><option value="father">Padre</option><option value="mother">Madre</option><option value="guardian">Tutor/a</option></select></label>
+<details><summary>Añadir otro Padre/Madre/Tutor (opcional)</summary>
+<div class="grid"><label>Nombre completo<input name="additionalGuardianName" maxlength="120" disabled></label><label>DNI/NIE del otro responsable<input name="additionalGuardianIdentifier" maxlength="12" disabled></label><label>Correo electrónico<input name="additionalGuardianEmail" type="email" maxlength="254" disabled></label><label>Teléfono<input name="additionalGuardianPhone" type="tel" maxlength="40" disabled></label></div>
+<p>Guardaremos la relación familiar. El club deberá confirmar el acceso de otra cuenta antes de compartir datos y pedidos.</p></details>
+<p>Los pedidos de las cuentas familiares vinculadas aparecerán en las fichas de todos los hijos menores, sin duplicar las compras.</p>
+</div>
 <p class="authorization"><a href="https://chat.whatsapp.com/HCeexWXYCFO7ayt5HTg3wP?s=sw&amp;p=a&amp;iam=2" target="_blank" rel="noopener noreferrer">Entrar al canal de información general del club en WhatsApp</a></p>
 <label id="guardianMemberField" hidden><input name="member" type="checkbox" disabled> El Padre/Madre/Tutor ya es socio del club (descuento para los menores inscritos)</label>
 <small>Comprobaremos el DNI en el padrón de esta temporada. Si el Padre/Madre/Tutor es socio, se descuentan 10 € en la cuota deportiva de cada hijo menor, sin límite de hijos. Los mayores de edad deben ser socios ellos mismos.</small>
@@ -192,7 +199,7 @@ header.club-header { display: flex; flex-wrap: wrap; align-items: center; gap: 1
 <script src="justificantes.js?v=103" defer></script>
 <script src="dorsales.js?v=140" defer></script>
 <script src="dorsal-picker.js?v=141" defer></script>
-<script src="inscripcion.js?v=dorsales-141" defer></script>
+<script src="inscripcion.js?v=160" defer></script>
 </html>
 
 

@@ -160,6 +160,7 @@ if (typeof document !== 'undefined') {
   const verify = document.querySelector('#registrationVerify');
   const signupStatus = document.querySelector('#registrationSignupStatus');
   bindDocument(form.elements.contactIdentifier);
+  bindDocument(form.elements.additionalGuardianIdentifier);
   bindDocument(signup.elements.identifier);
   let pendingAccount;
   let clubSession;
@@ -451,6 +452,8 @@ if (typeof document !== 'undefined') {
     fields.hidden = !mode;
     document.querySelector('#guardianMemberField').hidden = !minor;
     form.elements.member.disabled = !minor;
+    document.querySelector('#familyRelationships').hidden=!minor;
+    for(const name of ['contactRelationship','additionalGuardianName','additionalGuardianIdentifier','additionalGuardianEmail','additionalGuardianPhone'])form.elements[name].disabled=!minor;
     for (const name of ['contact', 'contactIdentifier', 'email', 'phone']) form.elements[name].disabled = !mode;
     if (!mode) return;
     if (contactMode === 'guardian' && mode !== 'guardian') {
@@ -630,7 +633,7 @@ if (typeof document !== 'undefined') {
     event.preventDefault();
     if(reviewing)return;
     updateContact();
-    const documents = [...container.querySelectorAll('[name="playerId"]'), form.elements.contactIdentifier];
+    const documents = [...container.querySelectorAll('[name="playerId"]'), form.elements.contactIdentifier, form.elements.additionalGuardianIdentifier];
     const invalidDocument = documents.map(input => ({input, valid: validateDocument(input)})).find(result => !result.valid);
     if (invalidDocument) {
       invalidDocument.input.focus();
@@ -796,6 +799,13 @@ if (typeof document !== 'undefined') {
       })),
     };
     const details = {
+      family: {
+        relationship: form.elements.contactRelationship.disabled ? 'self' : form.elements.contactRelationship.value,
+        ...(!form.elements.additionalGuardianName.disabled && form.elements.additionalGuardianName.value.trim() && {additional:{
+          name:form.elements.additionalGuardianName.value.trim(),relationship:'guardian',identifier:form.elements.additionalGuardianIdentifier.value.trim(),
+          email:form.elements.additionalGuardianEmail.value.trim(),phone:form.elements.additionalGuardianPhone.value.trim(),
+        }}),
+      },
       dorsals: players.map(player => player.dorsal),
       privacy: {version: '2026-2027-v3', acknowledged: form.elements.privacyRead.checked},
       contact: {

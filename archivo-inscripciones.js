@@ -27,7 +27,9 @@
     const pages=Math.max(1,Math.ceil(filtered.length/20));page=Math.max(1,Math.min(page,pages));
     list.replaceChildren();
     for(const row of filtered.slice((page-1)*20,page*20)){
-      const p=row.profile,card=text('article','');card.append(text('h2',p.name||'Nombre pendiente de revisar'),text('p',[p.category,p.division].filter(Boolean).join(' · ')),text('p',p.paymentState));
+      const p=row.profile,card=text('article',''),heading=text('h2',''),nameLink=text('a',p.name||'Nombre pendiente de revisar');
+      nameLink.href='ficha-jugador.html?history='+encodeURIComponent(row.source_row)+'&return='+(family?'mis-inscripciones.html':'panel.html');nameLink.target='_blank';nameLink.rel='noopener';heading.append(nameLink);
+      card.append(heading,text('p',[p.category,p.division].filter(Boolean).join(' · ')),text('p',p.paymentState));
       const details=document.createElement('details');details.append(text('summary','Ver ficha de archivo'),text('p','Nacimiento: '+p.birth+' · Documento: '+p.identifier),text('p',[p.contactName,p.contactEmail||p.submittedEmail,p.phone].filter(Boolean).join(' · ')),text('p',[p.address,p.town].filter(Boolean).join(' · ')),text('p','Equipación: '+[p.printName,p.shirt&&'Camisetas '+p.shirt,p.trousers&&'Pantalón '+p.trousers].filter(Boolean).join(' · ')),text('p','Respuesta original del '+p.received+' · Fila '+row.source_row));
       card.append(details);
       try{const url=new URL(p.receiptLink);if(url.protocol==='https:'&&url.hostname==='drive.google.com'){const link=text('a','Abrir justificante original en Drive');link.href=url.href;link.target='_blank';link.rel='noopener noreferrer';card.append(link);}}catch{}

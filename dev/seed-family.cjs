@@ -1,0 +1,18 @@
+'use strict';
+// Exclusivamente datos ficticios del servidor localhost.
+async function seedDemoFamily(db){
+ const id='16000000-0000-4000-8000-000000000001';
+ if((await db.query('select 1 from bm_pinto.registration_tests where id=$1',[id])).rows.length){await db.query('select bm_pinto.attach_registration_family($1)',[id]);return;}
+ await db.exec('begin');try{
+ await db.query("select set_config('request.jwt.claim.sub','14000000-0000-4000-8000-000000000001',true)");
+ const summary={registration_day:'2026-11-27',payment:'split',member:false,total:820,players:[{name:'Ana de ejemplo',category:'Benjamín',division:'female',team:'standard',hasKit:false,member:false,payments:[80,150,150],equipment:{role:'player',shirt:'S',trousers:'S',printName:'ANA'}},{name:'Pablo de ejemplo',category:'Alevín',division:'male',team:'standard',hasKit:false,member:false,payments:[80,200,160],equipment:{role:'player',shirt:'M',trousers:'M',printName:'PABLO'}}]};
+ const details={contact:{name:'Responsable de ejemplo',email:'familia@example.test',phone:'600000000'},family:{relationship:'mother',additional:{name:'Otro responsable de ejemplo',email:'otra@example.test',phone:'600000001',identifier:'00000000T',relationship:'father'}},players:[{birth:'2018-04-15',playerId:'',guardianId:'00000000T',address:'Calle de prueba',town:'Pinto',authorizations:{outings:'Sí',transport:'Sí',images:'No'}},{birth:'2016-03-12',playerId:'',guardianId:'00000000T',address:'Calle de prueba',town:'Pinto',authorizations:{outings:'Sí',transport:'No',images:'No'}}],dorsals:[50,51]};
+ await db.query('select public.bm_pinto_submit_registration_test_details($1,$2::jsonb,null,$3::jsonb)',[id,JSON.stringify(summary),JSON.stringify(details)]);
+ await db.query("insert into bm_pinto.orders(id,reference,recipient,email,phone,total_cents,payment_status,is_test) values('16000000-0000-4000-8000-000000000002','DEMO-FAMILIA-01','Familia de ejemplo','familia@example.test','600000000',5700,'receipt_received',false) on conflict do nothing");
+ await db.query("insert into bm_pinto.order_lines(order_id,garment,size,quantity,printed_name,printed_number) values('16000000-0000-4000-8000-000000000002','Chaqueta de chándal','S',1,'ANA','50'),('16000000-0000-4000-8000-000000000002','Pantalón de chándal','S',1,'ANA','50')");
+ await db.query("insert into bm_pinto.membership_test_requests(id,profile,season,kind,approved_at) values('16000000-0000-4000-8000-000000000003','{\"fullName\":\"Responsable de ejemplo\",\"email\":\"familia@example.test\"}','2026/2027','new',now()) on conflict do nothing");
+ for(const [i,p]of summary.players.entries())await db.query("insert into bm_pinto.registration_history(source_spreadsheet,source_sheet,source_row,season,player_key,is_current,profile) values('demo-family','Archivo ficticio',$1,'2026/2027',$2,true,$3::jsonb) on conflict do nothing",[1601+i,'demo-child-'+i,JSON.stringify({name:p.name,birth:details.players[i].birth,category:p.category,division:i?'Masculino':'Femenino',contactName:'Familia de ejemplo',contactEmail:'familia@example.test',phone:'600000000',paymentState:'Justificante aportado; ingreso sin conciliar'})]);
+ await db.exec('commit');
+ }catch(e){await db.exec('rollback');throw e;}
+}
+module.exports={seedDemoFamily};
