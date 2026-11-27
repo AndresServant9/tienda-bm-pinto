@@ -10,7 +10,8 @@
   "test:archive": "node dev/test-archive-filters.cjs",
   "test:family": "node dev/test-families.cjs",
   "test:profile": "node dev/test-profile.cjs",
-  "test:family-http": "node dev/test-family-http.cjs"
+  "test:family-http": "node dev/test-family-http.cjs",
+  "test:contacts": "node dev/test-family-contacts.cjs"
  },
  "dependencies": {
   "@electric-sql/pglite": "0.3.14"

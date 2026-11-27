@@ -151,3 +151,21 @@ SQL `sql/160-familias-y-fichas.sql` va después del 140. Solo se ha aplicado a b
 locales de ensayo y a una restauración local; no ejecutar ni desplegar sobre la
 tienda operativa. Las guardas de desarrollo siguen activas. Para publicar hará
 falta preparar la integración coordinada con main y revisar las relaciones reales.
+
+
+## Contactos familiares que compran como invitados (162)
+
+El club puede añadir un nombre, correo de compras y relación familiar desde la
+ficha, incluso si esa persona no tiene usuario. Solo un administrador puede
+confirmar el contacto. Se muestra previamente que sus pedidos aparecerán para
+las cuentas autorizadas de esa familia. Esta operación no crea cuentas, no vincula
+sesiones y no concede permiso para iniciar sesión; autorizar una cuenta verificada
+sigue siendo una operación separada.
+
+Los correos ya confirmados o las cuentas asignadas a otra familia requieren revisión,
+sin fusiones automáticas. Cada confirmación queda auditada y puede revocarse para
+contactos sin acceso de cuenta, sin borrar sus pedidos. La vinculación de una cuenta
+ya autorizada debe revisarse como acceso, no como contacto de compras.
+
+Aplicar `sql/162-contactos-familia-sin-cuenta.sql` después del 160. Pruebas:
+`npm run test:contacts`, `npm run test:profile` y `node dev/test-production.cjs`.
