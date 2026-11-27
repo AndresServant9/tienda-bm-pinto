@@ -169,3 +169,23 @@ ya autorizada debe revisarse como acceso, no como contacto de compras.
 
 Aplicar `sql/162-contactos-familia-sin-cuenta.sql` después del 160. Pruebas:
 `npm run test:contacts`, `npm run test:profile` y `node dev/test-production.cjs`.
+
+
+## Compras personales de adultos (163)
+
+Las fichas de mayores de edad muestran compras y cuenta propias, sin los contactos
+ni las compras de sus padres o hermanos. El club confirma los correos personales
+de compra, también para compras como invitado. El vínculo de compras no crea ni
+autoriza usuarios. El acceso a la ficha usa una operación separada con cuenta
+verificada y DNI/NIE coincidente. Los correos ya vinculados a otro jugador se
+bloquean hasta revisar la identidad; se puede revocar un correo adicional.
+
+En el archivo, el adulto tiene un flujo propio «Vincular compras del jugador».
+Se propone el correo de envío válido; no se usan marcadores como un punto. Los
+menores conservan el flujo de responsables. Un adulto archivado no se incorpora
+a la familia del responsable para recuperar sus compras.
+
+Aplicar `sql/163-compras-personales-adultos.sql` después del 162. Se conservan
+las definiciones anteriores en una tabla privada. `npm run test:adult` comprueba
+el aislamiento, compras de invitado, cuenta propia, documento, archivo y textos.
+El caso ficticio local está en `/ficha-jugador.html?history=1631` (admin de prueba).

@@ -1,0 +1,38 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{randomUUID}=require('node:crypto'),{createDatabase}=require('./database.cjs');
+async function runAdultContracts(db){
+ const q=async(s,a=[])=>(await db.query(s,a)).rows,user=id=>q("select set_config('request.jwt.claim.sub',$1,false)",[id||'']);
+ const parent='14000000-0000-4000-8000-000000000001',admin='14000000-0000-4000-8000-000000000003',adultAccount=randomUUID(),tag=randomUUID().slice(0,8),email='adulto-'+tag+'@example.test';
+ const family=(await q("insert into bm_pinto.families(name) values('Familia de prueba de aislamiento adulto') returning id"))[0].id;
+ await q("insert into bm_pinto.family_contacts(family_id,full_name,email,confirmed) values($1,'Responsable','padres-'||$2::text||'@example.test',true)",[family,tag]);
+ const adult=(await q("insert into bm_pinto.family_players(family_id,full_name,birth,identity_key,profile) values($1,'Adulto ficticio','1990-04-09',$2,'{\"details\":{\"playerId\":\"00000000T\"}}') returning id",[family,randomUUID()]))[0].id;
+ const child=(await q("insert into bm_pinto.family_players(family_id,full_name,birth,identity_key,profile) values($1,'Menor de la familia','2018-01-01',$2,'{}') returning id",[family,randomUUID()]))[0].id;
+ const order=randomUUID(),parentOrder=randomUUID();
+ for(const [id,mail]of [[order,email],[parentOrder,'padres-'+tag+'@example.test']])await q("insert into bm_pinto.orders(id,reference,idempotency_key,recipient,email,phone,tariff,total_cents,payment_status,is_test) values($1,$2,$1,'Compra ficticia',$3,'600000000','regular',4200,'receipt_received',false)",[id,'ADULTO-'+id.slice(0,8),mail]);
+ const dossier=async id=>(await q('select public.bm_pinto_player_dossier($1) data',[id]))[0].data,confirm=()=>q('select public.bm_pinto_confirm_player_purchases($1,$2)',[adult,email]);
+ await user(parent);await assert.rejects(confirm(),e=>e.code==='42501');await user(null);await assert.rejects(confirm(),e=>e.code==='42501');
+ await user(admin);await assert.rejects(q('select public.bm_pinto_confirm_player_purchases($1,$2)',[child,email]),e=>e.code==='22023');
+ await confirm();await confirm();assert.equal((await q('select count(*)::int n from auth.users where email=$1',[email]))[0].n,0);assert.equal((await q('select personal_account from bm_pinto.family_players where id=$1',[adult]))[0].personal_account,null);
+ let data=await dossier(adult);assert.equal(data.orders_scope,'personal');assert.equal(data.family,null);assert.deepEqual(data.contacts,[]);assert.deepEqual(data.siblings,[]);assert.ok(data.orders.some(o=>o.id===order));assert.ok(!data.orders.some(o=>o.id===parentOrder));assert.ok(!(await dossier(child)).orders.some(o=>o.id===order),'no se comparte el correo personal con menores de su antigua familia');
+ assert.equal((await q("select count(*)::int n from bm_pinto.player_purchase_audit where player_id=$1 and action='confirm'",[adult]))[0].n,1);
+ const other=(await q("insert into bm_pinto.family_players(family_id,full_name,birth,identity_key,profile) values($1,'Otro adulto','1995-01-01',$2,'{}') returning id",[family,randomUUID()]))[0].id;await assert.rejects(q('select public.bm_pinto_confirm_player_purchases($1,$2)',[other,email]),e=>e.code==='PT409');
+ await q('select public.bm_pinto_revoke_player_purchases($1,$2)',[adult,email]);assert.ok(!(await dossier(adult)).orders.some(o=>o.id===order));await confirm();
+ await q('insert into auth.users(id,email,email_confirmed_at) values($1,$2,now())',[adultAccount,email]);
+ await q("insert into bm_pinto.customer_identifiers(user_id,identifier_hash) values($1,encode(sha256(convert_to('00000000T','UTF8')),'hex'))",[adultAccount]);
+ await assert.rejects(q("select public.bm_pinto_link_player_account($1,'otra@example.test')",[adult]),e=>e.code==='PT409');
+ await q('select public.bm_pinto_link_player_account($1,$2)',[adult,email]);await user(adultAccount);data=await dossier(adult);assert.ok(data.orders.some(o=>o.id===order));assert.ok(!data.orders.some(o=>o.id===parentOrder));
+ await user(parent);await assert.rejects(dossier(adult),e=>e.code==='42501');
+ const sourceRow=300000+Math.floor(Math.random()*100000),sourceEmail='archivo-'+tag+'@example.test';
+ await q("insert into bm_pinto.registration_history(source_spreadsheet,source_sheet,source_row,season,player_key,is_current,source_headers,source_values,profile) values('adult-fixture','Archivo',$1,'2026/2027',$2,true,'[]','[]',$3::jsonb)",[sourceRow,randomUUID(),JSON.stringify({name:'Senior del archivo',birth:'1990-04-09',identifier:'00000000T',contactEmail:'familia@example.test',category:'Sénior'})]);
+ await assert.rejects(q('select public.bm_pinto_open_player_source(p_history_row=>$1)',[sourceRow]),e=>e.code==='42501','ni siquiera se previsualizan datos de adultos solo por compartir correo de contacto');
+ await user(admin);const preview=(await q('select public.bm_pinto_open_player_source(p_history_row=>$1) data',[sourceRow]))[0].data;assert.equal(preview.needs_personal_link,true);
+ const accounts=(await q('select count(*)::int n from bm_pinto.family_accounts'))[0].n;
+ const linked=(await q('select public.bm_pinto_open_player_source(p_history_row=>$1,p_account_email=>$2) data',[sourceRow,sourceEmail]))[0].data;assert.ok(linked.player_id);assert.equal((await dossier(linked.player_id)).personal_contacts[0].email,sourceEmail);assert.equal((await q('select count(*)::int n from bm_pinto.family_accounts'))[0].n,accounts);
+ assert.equal((await q('select count(*)::int n from bm_pinto.family_contacts where email=$1',[sourceEmail]))[0].n,0);
+ const retry=(await q('select public.bm_pinto_open_player_source(p_history_row=>$1,p_account_email=>$2) data',[sourceRow,sourceEmail]))[0].data;assert.equal(retry.player_id,linked.player_id);
+ await db.exec('set role authenticated');await assert.rejects(q('select * from bm_pinto.player_purchase_contacts'),e=>e.code==='42501');await db.exec('reset role');
+ await q('delete from bm_pinto.orders where id in($1,$2)',[order,parentOrder]);await q("delete from bm_pinto.registration_history where source_spreadsheet='adult-fixture' and source_row=$1",[sourceRow]);
+ console.log('PASS: adulto con compras de invitado propias, sin padres/hermanos ni acceso automatico; correo duplicado bloqueado, revocacion, cuenta propia con documento coincidente, archivo adulto e idempotencia.');
+}
+if(require.main===module)(async()=>{const db=await createDatabase();try{await runAdultContracts(db);await db.exec(fs.readFileSync(path.join(__dirname,'../sql/163-compras-personales-adultos.sql'),'utf8'));console.log('PASS: SQL 163 reejecutable.');}finally{await db.close();}})().catch(e=>{console.error(e.code,e.stack);process.exitCode=1;});
+module.exports={runAdultContracts};

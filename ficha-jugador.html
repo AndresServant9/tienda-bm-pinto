@@ -1,11 +1,11 @@
 <!doctype html><html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>Ficha del jugador · Balonmano Pinto</title>
 <link rel="stylesheet" href="club-shell.css?v=114"><link rel="stylesheet" href="ficha-jugador.css?v=162">
-<script src="club-auth.js?v=114" defer></script><script src="club-shell.js?v=114" defer></script><script src="ficha-jugador.js?v=162" defer></script></head>
+<script src="club-auth.js?v=114" defer></script><script src="club-shell.js?v=114" defer></script><script src="ficha-jugador.js?v=163" defer></script></head>
 <body><main class="player-page"><a id="backToPlayers" href="panel.html">Volver al listado</a>
 <header class="player-hero"><div class="player-avatar" aria-hidden="true" id="playerAvatar">BP</div><div><p>Club Balonmano Pinto</p><h1 id="playerTitle">Ficha del jugador</h1><p id="playerSubtitle"></p></div></header>
 <p id="playerStatus" role="status" tabindex="-1">Consultando ficha…</p>
-<section id="sourceLink" class="player-card" hidden><h2>Revisar la relación familiar</h2><p>La ficha del archivo aún no está asociada a una familia. Confirma el correo del responsable para reunir a sus hijos y sus pedidos.</p><label>Correo de la cuenta o del responsable<input id="familyAccountEmail" type="email" autocomplete="off"></label><button id="confirmFamilyLink" type="button">Confirmar relación y crear ficha</button></section>
+<section id="sourceLink" class="player-card" hidden><h2 id="sourceLinkTitle">Revisar la relación familiar</h2><p id="sourceLinkHelp">La ficha del archivo aún no está asociada a una familia. Confirma el correo del responsable para reunir a sus hijos y sus pedidos.</p><label><span id="sourceEmailLabel">Correo de la cuenta o del responsable</span><input id="familyAccountEmail" type="email" autocomplete="off"></label><button id="confirmFamilyLink" type="button">Confirmar relación y crear ficha</button></section>
 <section id="playerData" class="player-card" hidden></section>
 <nav id="playerTabs" aria-label="Apartados de la ficha" hidden><a href="#playerFamily">Familia</a><a href="#playerPayments">Inscripciones y cuotas</a><a href="#playerOrders">Pedidos familiares</a><a href="#playerMemberships">Socios</a></nav>
 <div id="playerSections" hidden><section id="playerFamily" class="player-card"></section><section id="playerPayments" class="player-card"></section><section id="playerOrders" class="player-card"></section><section id="playerMemberships" class="player-card"></section></div>

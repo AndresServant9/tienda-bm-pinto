@@ -11,7 +11,8 @@
   "test:family": "node dev/test-families.cjs",
   "test:profile": "node dev/test-profile.cjs",
   "test:family-http": "node dev/test-family-http.cjs",
-  "test:contacts": "node dev/test-family-contacts.cjs"
+  "test:contacts": "node dev/test-family-contacts.cjs",
+  "test:adult": "node dev/test-adult-purchases.cjs && node dev/test-adult-profile.cjs"
  },
  "dependencies": {
   "@electric-sql/pglite": "0.3.14"
