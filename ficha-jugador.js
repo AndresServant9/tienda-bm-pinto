@@ -58,6 +58,38 @@
    for(const m of data.memberships){const article=node('article');article.append(node('h3',m.name||'Solicitud de socio'),node('p',[m.kind==='renew'?'Renovación':'Alta',m.season].join(' · ')),node('p',m.rejected_at?'Rechazada':m.approved_at?'Validada':m.awaiting_receipt?'Pendiente de justificante':'Pendiente de revisión'));requests.append(article);}members.append(requests);
   }else if(!info)members.append(node('p','El estado de socio no está disponible. Actualiza la ficha para comprobarlo.','player-empty'));
  }
+ function receiptButton(id,payment){
+  const button=node('button','Descargar justificante'),feedback=node('span');button.type='button';feedback.setAttribute('role','status');
+  button.onclick=async()=>{const current=generation;button.disabled=true;feedback.textContent='';try{
+   const receipt=await rpc('bm_pinto_download_registration_test_receipt',{p_id:id,p_schedule:payment.schedule,p_installment:payment.installment});if(current!==generation)return;
+   const extension=({'application/pdf':'pdf','image/jpeg':'jpg','image/png':'png'})[receipt?.mime];if(!extension||!receipt.file)throw Error('Archivo no disponible');
+   const bytes=Uint8Array.from(atob(receipt.file),c=>c.charCodeAt(0)),url=URL.createObjectURL(new Blob([bytes],{type:receipt.mime})),link=node('a');link.href=url;link.download='justificante-pago-'+payment.installment+'.'+extension;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }catch{if(current===generation)feedback.textContent='No se pudo descargar. Revisa tu acceso o actualiza la ficha.';}finally{button.disabled=false;}};
+  const actions=node('div',undefined,'player-actions');actions.append(button,feedback);return actions;
+ }
+ function renderPayments(data){
+  const box=card('playerPayments','Inscripciones y cuotas'),refresh=node('button','Actualizar cuotas');refresh.type='button';refresh.className='payment-refresh';refresh.onclick=async()=>{refresh.disabled=true;try{await loadDossier(data.player.id,generation);}catch{get('playerStatus').textContent='No se pudieron actualizar las cuotas. Vuelve a intentarlo.';}finally{refresh.disabled=false;}};box.append(refresh);
+  const old=data.player.profile.archive||{};
+  if(!data.registrations.length){
+   box.append(node('p',old.paymentState||'No hay cuotas de inscripción vinculadas.','player-empty'));
+   box.append(node('p','El archivo anterior no contiene un desglose de cuotas conciliadas. No se pueden calcular lo pagado y lo pendiente a partir del justificante.','player-note'));
+  }
+  for(const r of data.registrations){const article=node('article');article.append(node('h3',r.player.category||'Inscripción'));
+   if(r.shared)article.append(node('p','Esta inscripción incluye varios jugadores. Los importes corresponden a la inscripción compartida.','player-note'));
+   const p=r.payments;if(!p){article.append(node('p','El detalle de pagos no está disponible.'));box.append(article);continue;}
+   if(p.agreement_pending){article.append(node('p','Acuerdo de pago pendiente de concretar con el club.','player-note'));box.append(article);continue;}
+   const totals=node('div',undefined,'payment-totals');for(const [label,value,cls] of [['Total',p.total,''],['Pagado',p.confirmed,'payment-paid'],['En revisión',p.in_review,'payment-review'],['Pendiente',p.pending,'payment-pending']]){const item=node('div',undefined,cls);item.append(node('span',label),node('strong',euro.format(Number(value)||0)));totals.append(item);}article.append(totals);
+   const list=node('div',undefined,'payment-list');for(const [index,payment] of (p.installments||[]).filter(i=>Number(i.amount)>0).entries()){
+    const line=node('div',undefined,'payment-row'),head=node('div',undefined,'payment-row-heading');head.append(node('strong','Pago '+(index+1)),node('strong',euro.format(payment.amount)),node('span',state[payment.status]||payment.status,'payment-state payment-'+payment.status));line.append(head);
+    line.append(node('p',payment.due_on?'Vencimiento · '+dates(payment.due_on):'Sin vencimiento'));
+    if(payment.confirmed_at)line.append(node('p','Confirmado el '+dates(payment.confirmed_at),'player-empty'));
+    else if(payment.receipt_received_at)line.append(node('p','Justificante recibido el '+dates(payment.receipt_received_at),'player-empty'));
+    if(payment.receipt_received_at)line.append(receiptButton(r.registration_id,payment));list.append(line);
+   }article.append(list);
+   if(p.mode==='demand'&&Number(p.pending)>0)article.append(node('p','Saldo pendiente sin vencimiento: '+euro.format(p.pending),'player-note'));box.append(article);
+  }
+  if(old.receiptLink){try{const url=new URL(old.receiptLink);if(url.protocol==='https:'&&['drive.google.com','docs.google.com'].includes(url.hostname)){const link=node('a','Abrir justificante del formulario anterior');link.href=url.href;link.target='_blank';link.rel='noopener noreferrer';const actions=node('div',undefined,'player-actions');actions.append(link);box.append(actions,node('p','Este justificante no confirma por sí solo el ingreso.','player-empty'));}}catch{}}
+ }
  function render(data){
   const minor=data.is_minor??data.orders_scope==='family';
   activePlayer=data;archive=null;get('sourceLink').hidden=true;get('familyRoster').hidden=true;get('playerStatus').textContent='';
@@ -84,11 +116,7 @@
   }
   if(data.admin){const details=node('details');details.append(node('summary','Confirmar otra cuenta de esta familia'));const label=node('label','Correo de la cuenta verificada'),input=node('input');input.type='email';input.autocomplete='off';label.append(input);const button=node('button','Vincular cuenta familiar');button.type='button';const status=node('p');status.setAttribute('role','status');button.onclick=async()=>{if(!input.value||!input.reportValidity())return;button.disabled=true;try{await rpc('bm_pinto_link_family_account',{p_family_id:data.family.id,p_email:input.value.trim()});await loadDossier(data.player.id,generation);}catch{status.textContent='No se pudo vincular. Revisa que la cuenta esté verificada y no pertenezca a otra familia.';}finally{button.disabled=false;}};details.append(label,button,status);family.append(details);}
   }else renderPersonalLinks(data);
-  const payments=card('playerPayments','Inscripciones y cuotas');
-  if(!data.registrations.length)payments.append(node('p',data.player.profile.archive?.paymentState||'No hay cuotas de inscripción vinculadas. Los justificantes del archivo no se consideran pagos confirmados.','player-empty'));
-  for(const r of data.registrations){const article=node('article');article.append(node('h3',r.player.category||'Inscripción'));if(r.shared)article.append(node('p','Esta inscripción incluye varios jugadores. Los importes siguientes corresponden a la inscripción compartida.','player-note'));
-   const p=r.payments;if(!p)article.append(node('p','El detalle de pagos no está disponible.'));else{article.append(node('p','Total '+euro.format(p.total)+' · Confirmado '+euro.format(p.confirmed)+' · En revisión '+euro.format(p.in_review)+' · Pendiente '+euro.format(p.pending),'player-money'));for(const [index,i] of (p.installments||[]).filter(i=>Number(i.amount)>0).entries())article.append(node('p',['Pago '+(index+1),i.due_on?dates(i.due_on):'Sin vencimiento',euro.format(i.amount),state[i.status]||i.status].join(' · ')));}payments.append(article);
-  }
+  renderPayments(data);
   const orders=card('playerOrders',data.orders_scope==='family'?'Pedidos familiares':'Pedidos del jugador');if(data.orders_scope==='family')orders.append(node('p','Son los mismos pedidos en las fichas de todos los hijos menores. Cada compra se registra una sola vez.','player-note'));
   if(data.orders.length===100)orders.append(node('p','Se muestran los 100 pedidos más recientes.','player-note'));
   if(!data.orders.length)orders.append(node('p',minor?'No hay pedidos vinculados a los correos confirmados de esta familia.':'No hay pedidos vinculados a los correos confirmados del jugador.','player-empty'));

@@ -208,3 +208,12 @@ Aplicar `sql/164-estado-socio-en-fichas.sql` después del 163. Conserva la defin
 anterior del dossier en una tabla privada. Pruebas: `npm run test:membership`;
 incluyen temporadas, identidad propia/tutor, contactos sin cuenta, homónimos,
 pendientes, rechazos, duplicados, aislamiento y presentación de los estados.
+
+## Cuotas y justificantes en la ficha (165)
+
+Resumen por inscripción de total, pagado, en revisión y pendiente; cuotas con
+vencimiento y descarga del justificante mediante la función autenticada existente.
+Las inscripciones compartidas conservan sus importes conjuntos, sin multiplicarlos
+por jugador. El botón Actualizar cuotas consulta el estado vigente. Los justificantes
+del archivo anterior se abren en Drive; no se inventan saldos ni ingresos conciliados.
+Actualización visual sin SQL ni cambios de permisos o datos.
