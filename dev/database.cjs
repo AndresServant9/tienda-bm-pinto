@@ -17,6 +17,7 @@ async function createDatabase(dataDir){
  await db.exec(fs.readFileSync(path.join(root,'sql/160-familias-y-fichas.sql'),'utf8'));
  await db.exec(fs.readFileSync(path.join(root,'sql/162-contactos-familia-sin-cuenta.sql'),'utf8'));
  await db.exec(fs.readFileSync(path.join(root,'sql/163-compras-personales-adultos.sql'),'utf8'));
+ await db.exec(fs.readFileSync(path.join(root,'sql/164-estado-socio-en-fichas.sql'),'utf8'));
  return db;
 }
 module.exports={createDatabase};

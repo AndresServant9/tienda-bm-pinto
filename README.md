@@ -189,3 +189,22 @@ Aplicar `sql/163-compras-personales-adultos.sql` después del 162. Se conservan
 las definiciones anteriores en una tabla privada. `npm run test:adult` comprueba
 el aislamiento, compras de invitado, cuenta propia, documento, archivo y textos.
 El caso ficticio local está en `/ficha-jugador.html?history=1631` (admin de prueba).
+
+## Estado de socio en las fichas (164)
+
+La ficha distingue el estado propio del jugador y, en menores, los responsables
+socios confirmados. Se consulta el padrón de la temporada activa y las solicitudes
+validadas. Los datos importados también cuentan; una solicitud pendiente o rechazada
+no acredita ser socio. No se cambian cuotas, descuentos, contactos ni accesos.
+
+Los menores no heredan la condición de socio por llevar el documento de un tutor
+en el archivo. Un contacto confirmado sin cuenta puede identificarse por correo
+y nombre coincidente único del padrón. Las ambigüedades quedan por revisar; un
+correo compartido no atribuye automáticamente el estado a otra persona. Los
+adultos mantienen exclusivamente su estado propio. La consulta sigue protegida
+por los permisos de la ficha; no existe un buscador público de socios.
+
+Aplicar `sql/164-estado-socio-en-fichas.sql` después del 163. Conserva la definición
+anterior del dossier en una tabla privada. Pruebas: `npm run test:membership`;
+incluyen temporadas, identidad propia/tutor, contactos sin cuenta, homónimos,
+pendientes, rechazos, duplicados, aislamiento y presentación de los estados.

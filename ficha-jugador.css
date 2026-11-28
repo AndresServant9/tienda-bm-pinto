@@ -3,3 +3,5 @@
 .player-hero{flex-wrap:wrap}.player-hero>div:not(.player-avatar){flex:1;min-width:0}.player-hero .club-navigation{flex-basis:100%;margin:4px 0 0}.player-hero h1{overflow-wrap:anywhere}
 
 .player-card select{display:block;width:100%;font:inherit;padding:11px;border:1px solid #bcb7b0;border-radius:8px;margin:6px 0 16px;background:white}
+
+.player-membership-summary{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 20px}.member-badge{display:inline-block;padding:7px 11px;border-radius:8px;font-size:.9rem;font-weight:650;line-height:1.45;overflow-wrap:anywhere;background:#f1f0ec;color:#504b44;margin:3px 0}.member-active{background:#e4f5e9;color:#155b30}.member-pending,.member-review,.member-pending_link{background:#fff2c7;color:#704c00}.member-guardian{padding:10px 12px;border-left:4px solid #248447;background:#edf8ef;border-radius:4px}#playerMemberships>details{margin-top:22px}#playerMemberships>div{margin:18px 0}

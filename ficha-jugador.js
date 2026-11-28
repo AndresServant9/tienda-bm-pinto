@@ -37,6 +37,27 @@
   const accountLabel=node('label','Correo de la cuenta verificada del jugador'),accountInput=node('input');accountInput.type='email';accountInput.required=true;accountInput.autocomplete='off';accountLabel.append(accountInput);
   const accountButton=node('button','Autorizar acceso a su ficha'),accountStatus=node('p');accountStatus.setAttribute('role','status');accountButton.type='button';accountButton.onclick=async()=>{if(!accountInput.reportValidity())return;accountButton.disabled=true;const current=generation;try{await rpc('bm_pinto_link_player_account',{p_player_id:data.player.id,p_email:accountInput.value.trim()});await loadDossier(data.player.id,current);}catch{accountStatus.textContent='No se pudo autorizar. Revisa que la cuenta esté verificada, que su DNI/NIE coincida y que la ficha no tenga ya otra cuenta.';}finally{accountButton.disabled=false;}};access.append(accountLabel,accountButton,accountStatus);box.append(access);
  }
+ function memberBadge(status,season,prefix=''){
+  const labels={active:'Socio/a de '+season,pending:'Solicitud pendiente de validar',not_found:'No consta como socio/a de '+season,unknown:'Pendiente de comprobar',review:'Datos por revisar en el club',pending_link:'Relación pendiente de confirmar'};
+  return node('span',(prefix?prefix+': ':'')+(labels[status?.status]||labels.unknown),'member-badge member-'+(status?.status||'unknown'));
+ }
+ function renderMemberships(data,minor){
+  const info=data.membership_state,members=card('playerMemberships',info?'Socios · '+info.season:'Socios relacionados');
+  if(info){
+   const summary=node('div',undefined,'player-membership-summary');summary.append(memberBadge(info.player,info.season,'Jugador'));
+   for(const person of info.guardians||[])summary.append(node('span',({mother:'Madre socia',father:'Padre socio',guardian:'Responsable socio/a'})[person.relationship]+': '+person.name,'member-badge member-active'));
+   get('playerData').querySelector('h2').after(summary);
+   const own=node('article');own.append(node('h3',data.player.name),memberBadge(info.player,info.season));members.append(own);
+   if(minor){const section=node('div');section.append(node('h3','Responsables socios de esta temporada'));
+    if(!info.guardians?.length)section.append(node('p','No hay responsables socios confirmados con los datos vinculados.','player-empty'));
+    for(const person of info.guardians||[])section.append(node('p',person.name+' · '+({mother:'Madre',father:'Padre',guardian:'Padre/Madre/Tutor'})[person.relationship],'member-guardian'));
+    members.append(section);}
+   members.append(node('p','Estado comprobado en el padrón de la temporada y las solicitudes validadas. Una solicitud pendiente no acredita ser socio.','player-empty'));
+  }
+  if(data.memberships.length){const requests=node('details');requests.append(node('summary','Solicitudes de socio relacionadas'));
+   for(const m of data.memberships){const article=node('article');article.append(node('h3',m.name||'Solicitud de socio'),node('p',[m.kind==='renew'?'Renovación':'Alta',m.season].join(' · ')),node('p',m.rejected_at?'Rechazada':m.approved_at?'Validada':m.awaiting_receipt?'Pendiente de justificante':'Pendiente de revisión'));requests.append(article);}members.append(requests);
+  }else if(!info)members.append(node('p','El estado de socio no está disponible. Actualiza la ficha para comprobarlo.','player-empty'));
+ }
  function render(data){
   const minor=data.is_minor??data.orders_scope==='family';
   activePlayer=data;archive=null;get('sourceLink').hidden=true;get('familyRoster').hidden=true;get('playerStatus').textContent='';
@@ -50,7 +71,7 @@
   if(minor){
   const family=card('playerFamily',(data.family.name||'Familia').replace(/^Familia de Familia de /,'Familia de '));
   const siblingLinks=node('div',undefined,'player-actions');for(const p of data.siblings){const a=node('a',p.name);a.href='ficha-jugador.html?player='+encodeURIComponent(p.id)+'&return='+encodeURIComponent(data.admin?'panel.html':'mis-inscripciones.html');siblingLinks.append(a);}family.append(siblingLinks);
-  for(const c of data.contacts){const article=node('article');article.append(node('h3',c.name));fields(article,[['Relación',({father:'Padre',mother:'Madre',guardian:'Padre/Madre/Tutor',self:'Titular',account:'Cuenta familiar'})[c.relationship]||c.relationship],['Correo',c.email],['Teléfono',c.phone],['Vínculo',c.confirmed?'Relación confirmada':'Pendiente de confirmar por el club'],['Cuenta de acceso',c.has_account?'Cuenta familiar autorizada':'Este contacto no tiene acceso de cuenta']]);if(data.admin&&c.id&&c.confirmed&&!c.has_account){const revoke=node('button','Desvincular compras de este contacto');revoke.type='button';const message=node('p');message.setAttribute('role','status');revoke.onclick=async()=>{revoke.disabled=true;try{await rpc('bm_pinto_revoke_family_contact',{p_contact_id:c.id});await loadDossier(data.player.id,generation);}catch{message.textContent='No se pudo desvincular. Si tiene una cuenta autorizada, el club debe revisar su acceso.';}finally{revoke.disabled=false;}};article.append(revoke,message);}family.append(article);}
+  for(const c of data.contacts){const article=node('article');article.append(node('h3',c.name));if(data.membership_state)article.append(memberBadge(data.membership_state.contacts?.[c.id],data.membership_state.season));fields(article,[['Relación',({father:'Padre',mother:'Madre',guardian:'Padre/Madre/Tutor',self:'Titular',account:'Cuenta familiar'})[c.relationship]||c.relationship],['Correo',c.email],['Teléfono',c.phone],['Vínculo',c.confirmed?'Relación confirmada':'Pendiente de confirmar por el club'],['Cuenta de acceso',c.has_account?'Cuenta familiar autorizada':'Este contacto no tiene acceso de cuenta']]);if(data.admin&&c.id&&c.confirmed&&!c.has_account){const revoke=node('button','Desvincular compras de este contacto');revoke.type='button';const message=node('p');message.setAttribute('role','status');revoke.onclick=async()=>{revoke.disabled=true;try{await rpc('bm_pinto_revoke_family_contact',{p_contact_id:c.id});await loadDossier(data.player.id,generation);}catch{message.textContent='No se pudo desvincular. Si tiene una cuenta autorizada, el club debe revisar su acceso.';}finally{revoke.disabled=false;}};article.append(revoke,message);}family.append(article);}
   if(data.admin){
    const contactTools=node('details');contactTools.append(node('summary','Añadir responsable o correo de compras'));
    contactTools.append(node('p','Puede haber comprado como invitado, sin cuenta del club. Al confirmar el correo, sus pedidos se verán en las fichas de los hijos menores de esta familia. Este vínculo no permite iniciar sesión.','player-note'));
@@ -72,8 +93,7 @@
   if(data.orders.length===100)orders.append(node('p','Se muestran los 100 pedidos más recientes.','player-note'));
   if(!data.orders.length)orders.append(node('p',minor?'No hay pedidos vinculados a los correos confirmados de esta familia.':'No hay pedidos vinculados a los correos confirmados del jugador.','player-empty'));
   for(const o of data.orders){const article=node('article');article.append(node('h3',o.reference),node('p',[o.recipient,dates(o.created_at),state[o.payment_status]||o.payment_status].join(' · ')),node('p',euro.format(o.total_cents/100),'player-money'));const details=node('details');details.append(node('summary','Ver prendas'));for(const l of o.lines)details.append(node('p',[l.garment,l.size,l.quantity+' ud.',l.printed_name,l.printed_number&&'Dorsal '+l.printed_number].filter(Boolean).join(' · ')));article.append(details);orders.append(article);}
-  const members=card('playerMemberships','Socios relacionados');if(!data.memberships.length)members.append(node('p',minor?'No hay solicitudes de socio vinculadas a las cuentas de esta familia.':'No hay solicitudes de socio vinculadas al jugador.','player-empty'));
-  for(const m of data.memberships){const article=node('article');article.append(node('h3',m.name||'Solicitud de socio'),node('p',[m.kind==='renew'?'Renovación':'Alta',m.season].join(' · ')),node('p',m.rejected_at?'Rechazada':m.approved_at?'Validada':m.awaiting_receipt?'Pendiente de justificante':'Pendiente de revisión'));members.append(article);}
+  renderMemberships(data,minor);
   get('playerSections').hidden=false;get('playerTabs').hidden=false;
  }
  async function loadDossier(id,current){const data=await rpc('bm_pinto_player_dossier',{p_player_id:id});if(current!==generation)return;render(data);}

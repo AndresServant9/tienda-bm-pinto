@@ -26,3 +26,12 @@ create or replace function public.bm_pinto_registration_test_payments(p_registra
 create or replace function public.bm_pinto_admin_registration_history() returns jsonb language plpgsql security definer set search_path='' as $$begin if not public.bm_pinto_is_admin() then raise exception 'Acceso reservado' using errcode='42501';end if;return (select coalesce(jsonb_agg(jsonb_build_object('source_row',source_row,'profile',profile)),'[]') from bm_pinto.registration_history where is_current);end;$$;
 create or replace function public.bm_pinto_my_registration_history() returns jsonb language sql security definer set search_path='' as $$select coalesce(jsonb_agg(jsonb_build_object('source_row',r.source_row,'profile',r.profile)),'[]') from bm_pinto.registration_history r join auth.users u on u.id=auth.uid() and u.email_confirmed_at is not null where r.is_current and lower(r.profile->>'contactEmail')=lower(u.email)$$;
 revoke all on bm_pinto.orders,bm_pinto.order_lines,bm_pinto.membership_test_requests,bm_pinto.registration_history from public,anon,authenticated;
+
+create table if not exists bm_pinto.memberships(season text not null,identifier_hash text not null,imported_at timestamptz default now(),primary key(season,identifier_hash));
+create table if not exists bm_pinto.membership_history(source_spreadsheet text not null,source_sheet text not null,source_row integer not null,season text not null,identifier_hash text not null,source_identifier_hash text not null,profile jsonb not null,source_date text default '',notes jsonb default '{}',imported_at timestamptz default now(),primary key(source_spreadsheet,source_sheet,source_row));
+create table if not exists bm_pinto.membership_renewal_directory(season text not null,identifier_hash text not null,full_name text not null,email text not null,profile jsonb default '{}',primary key(season,identifier_hash));
+alter table bm_pinto.membership_test_requests add column if not exists identifier_hash text;
+revoke all on bm_pinto.memberships,bm_pinto.membership_history,bm_pinto.membership_renewal_directory from public,anon,authenticated;
+
+alter table bm_pinto.membership_test_requests add column if not exists receipt bytea;
+alter table bm_pinto.membership_test_requests add column if not exists mime text;
